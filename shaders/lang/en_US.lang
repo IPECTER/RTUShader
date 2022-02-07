@@ -69,9 +69,9 @@ screen.WAVING=Waving Blocks
 screen.CURVATURE=Curvature
 
 #Settings
-option.ABOUT=BSL v8.1.02.1
-option.ABOUT.comment=by Capt Tatsu. bitslablab.com
-value.ABOUT.0=by Capt Tatsu
+option.ABOUT=RTU-Shader v1.0
+option.ABOUT.comment=by IPECTER. (BSLedit)
+value.ABOUT.0=by IPECTER
 
 #Lighting
 option.shadowMapResolution=Shadowmap Quality
