@@ -111,8 +111,8 @@ Please don't edit anything from Undefine section and onwards.
 
 //Water//
   #define WATER_MODE 0 //[0 1 2 3]
-  #define WATER_ALPHA_MODE 0 //[0 1]
-  #define WATER_NORMALS 1 //[0 1 2]
+  #define WATER_ALPHA_MODE 1 //[0 1]
+  #define WATER_NORMALS 2 //[0 1 2]
   #define WATER_PARALLAX
   #define WATER_BUMP 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define WATER_DETAIL 0.25 //[0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50]
@@ -131,7 +131,7 @@ Please don't edit anything from Undefine section and onwards.
   #define BLOOM_CONTRAST 0 //[-4 -3 -2 -1 0 1 2 3 4]
   #define BLOOM_RADIUS 7 //[1 2 3 4 5 6 7]
   #define LENS_FLARE
-  #define LENS_FLARE_STRENGTH 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
+  #define LENS_FLARE_STRENGTH 2.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define FXAA
 //#define TAA
   #define VIGNETTE
