@@ -41,6 +41,11 @@ void Outline(vec3 color, bool secondPass, out vec4 outerOutline, out vec4 innerO
         iOutlineMask *= clamp(1.125 + (linZ * 2.0 - linSampleZSum) * 32.0 * far, 0.0, 1.0);
         #endif
 	}
+    
+	#if ALPHA_BLEND == 0
+	oOutlineColor *= oOutlineColor;
+	#endif
+
     oOutlineColor = sqrt(oOutlineColor) * 0.35;
     oOutlineColor *= oOutlineColor;
     oOutlineMask = 1.0 - oOutlineMask;

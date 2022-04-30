@@ -12,12 +12,14 @@ https://bitslablab.com
 //Varyings//
 varying vec2 texCoord;
 
+varying vec4 color;
+
 //Uniforms//
 uniform sampler2D texture;
 
 //Program//
 void main() {
-    vec4 albedo = texture2D(texture, texCoord);
+    vec4 albedo = texture2D(texture, texCoord) * color;
     albedo.rgb = pow(albedo.rgb,vec3(2.2)) * 4.0;
 	
     #ifdef WHITE_WORLD
@@ -47,6 +49,8 @@ void main() {
 //Varyings//
 varying vec2 texCoord;
 
+varying vec4 color;
+
 //Uniforms//
 #ifdef TAA
 uniform int frameCounter;
@@ -69,6 +73,8 @@ uniform mat4 gbufferModelViewInverse;
 //Program//
 void main() {
 	texCoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+
+	color = gl_Color;
 
 	#ifdef WORLD_CURVATURE
 	vec4 position = gbufferModelViewInverse * gl_ModelViewMatrix * gl_Vertex;

@@ -69,9 +69,9 @@ screen.WAVING=Waving Blocks
 screen.CURVATURE=Curvature
 
 #Settings
-option.ABOUT=RTU-Shader v1.0
-option.ABOUT.comment=by IPECTER. (BSLedit)
-value.ABOUT.0=by IPECTER
+option.ABOUT=§bRTUShader §fv§62.0§f
+option.ABOUT.comment=RTUShader(BSLedit) by 이팩터 / BSL by Capt Tatsu
+value.ABOUT.0=by 이팩터
 
 #Lighting
 option.shadowMapResolution=Shadowmap Quality
