@@ -48,8 +48,20 @@ vec3 CalcLightColor(vec3 sun, vec3 night, vec3 weatherCol) {
 	return c * c;
 }
 
-vec3 lightSun   = CalcSunColor(lightMorning, lightDay, lightEvening);
-vec3 ambientSun = CalcSunColor(ambientMorning, ambientDay, ambientEvening);
+vec3 lightSun = mix(mix(lightMorning, lightEvening, mefade), lightDay, dfade);
 
-vec3 lightCol   = CalcLightColor(lightSun, lightNight, weatherCol.rgb);
-vec3 ambientCol = CalcLightColor(ambientSun, ambientNight, weatherCol.rgb);
+vec3 ambientSun = mix(mix(ambientMorning, ambientEvening, mefade), ambientDay, dfade);
+
+vec3 lightColRaw = mix(lightNight, lightSun, sunVisibility);
+vec3 lightColSqrt = mix(lightColRaw, dot(lightColRaw, vec3(0.299, 0.587, 0.114)) * weatherCol.rgb, rainStrength);
+vec3 lightCol = lightColSqrt * lightColSqrt;
+
+vec3 ambientColRaw = mix(ambientNight, ambientSun, sunVisibility);
+vec3 ambientColSqrt = mix(ambientColRaw, dot(ambientColRaw, vec3(0.299, 0.587, 0.114)) * weatherCol.rgb, rainStrength);
+vec3 ambientCol = ambientColSqrt * ambientColSqrt;
+
+// vec3 lightSun   = CalcSunColor(lightMorning, lightDay, lightEvening);
+// vec3 ambientSun = CalcSunColor(ambientMorning, ambientDay, ambientEvening);
+
+// vec3 lightCol   = CalcLightColor(lightSun, lightNight, weatherCol.rgb);
+// vec3 ambientCol = CalcLightColor(ambientSun, ambientNight, weatherCol.rgb);

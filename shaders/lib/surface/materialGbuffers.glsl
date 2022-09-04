@@ -7,7 +7,7 @@ void GetMaterials(out float smoothness, out float metalness, out float f0, inout
     smoothness = specularMap.r;
     
     metalness = specularMap.g;
-    f0 = 0.02;
+    f0 = 0.04;
 
     float emissionMat = specularMap.b * specularMap.b;
     ao = 1.0;
@@ -23,7 +23,7 @@ void GetMaterials(out float smoothness, out float metalness, out float f0, inout
     metalness = f0 >= 0.9 ? 1.0 : 0.0;
     porosity = specularMap.b <= 0.251 ? specularMap.b * 3.984 : 0.0;
     float sssMat = specularMap.b > 0.251 ? clamp(specularMap.b * 1.335 - 0.355, 0.0, 1.0) : 0.0;
-    #if SSS == 2
+    #ifdef SSS
     subsurface = mix(sssMat, 1.0, subsurface);
     #else
     subsurface = sssMat;

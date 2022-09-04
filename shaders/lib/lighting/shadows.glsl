@@ -50,10 +50,10 @@ float GetCurvedBias(int i, float dither) {
 
 float InterleavedGradientNoise() {
 	float n = 52.9829189 * fract(0.06711056 * gl_FragCoord.x + 0.00583715 * gl_FragCoord.y);
-	return fract(n + frameCounter / 8.0);
+	return fract(n + frameCounter * 1.618);
 }
 
-vec3 SampleBasicShadow(vec3 shadowPos) {
+vec3 SampleBasicShadow(vec3 shadowPos, float subsurface) {
     float shadow0 = shadow2D(shadowtex0, vec3(shadowPos.st, shadowPos.z)).x;
 
     vec3 shadowCol = vec3(0.0);
@@ -64,23 +64,18 @@ vec3 SampleBasicShadow(vec3 shadowPos) {
     }
     #endif
 
+    shadow0 *= mix(shadow0, 1.0, subsurface);
+    shadowCol *= shadowCol;
+
     return clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
 }
 
-vec3 SampleFilteredShadow(vec3 shadowPos, float offset, float biasStep) {
+vec3 SampleFilteredShadow(vec3 shadowPos, float offset, float biasStep, float subsurface) {
     float shadow0 = 0.0;
-
-    #if SSS_QUALITY == 1
-    float sz = shadowPos.z;
-    float dither = InterleavedGradientNoise();
-    #endif
     
     for (int i = 0; i < 9; i++) {
         vec2 shadowOffset = shadowOffsets[i] * offset;
         shadow0 += shadow2D(shadowtex0, vec3(shadowPos.st + shadowOffset, shadowPos.z)).x;
-        #if SSS_QUALITY == 1
-        if (biasStep > 0.0) shadowPos.z = sz - biasStep * GetCurvedBias(i, dither);
-        #endif
     }
     shadow0 /= 9.0;
 
@@ -91,13 +86,13 @@ vec3 SampleFilteredShadow(vec3 shadowPos, float offset, float biasStep) {
             vec2 shadowOffset = shadowOffsets[i] * offset;
             shadowCol += texture2D(shadowcolor0, shadowPos.st + shadowOffset).rgb *
                          shadow2D(shadowtex1, vec3(shadowPos.st + shadowOffset, shadowPos.z)).x;
-            #if SSS_QUALITY == 1
-            if (biasStep > 0.0) shadowPos.z = sz - biasStep * GetCurvedBias(i, dither);
-            #endif
         }
         shadowCol /= 9.0;
     }
     #endif
+
+    shadow0 *= mix(shadow0, 1.0, subsurface);
+    shadowCol *= shadowCol;
 
     return clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
 }
@@ -133,9 +128,6 @@ vec3 GetShadow(vec3 worldPos, float NoL, float subsurface, float skylight) {
     
     if (subsurface > 0.0) {
         bias = 0.0002;
-        #if defined SHADOW_FILTER && SSS_QUALITY == 1
-        bias *= mix(subsurface, 1.0, NoL);
-        #endif
         offset = 0.0007;
     }
     float biasStep = 0.001 * subsurface * (1.0 - NoL);
@@ -147,10 +139,103 @@ vec3 GetShadow(vec3 worldPos, float NoL, float subsurface, float skylight) {
     shadowPos.z -= bias;
 
     #ifdef SHADOW_FILTER
-    vec3 shadow = SampleFilteredShadow(shadowPos, offset, biasStep);
+    vec3 shadow = SampleFilteredShadow(shadowPos, offset, biasStep, subsurface);
     #else
-    vec3 shadow = SampleBasicShadow(shadowPos);
+    vec3 shadow = SampleBasicShadow(shadowPos, subsurface);
     #endif
 
     return shadow;
 }
+
+vec3 GetSubsurfaceShadow(vec3 worldPos, float subsurface, float skylight) {
+    float gradNoise = InterleavedGradientNoise();
+    
+    vec3 shadowPos = ToShadow(worldPos);
+
+    float distb = sqrt(dot(shadowPos.xy, shadowPos.xy));
+    float distortFactor = distb * shadowMapBias + (1.0 - shadowMapBias);
+    shadowPos = DistortShadow(shadowPos, distortFactor);
+
+    vec3 subsurfaceShadow = vec3(0.0);
+
+    for(int i = 0; i < 12; i++) {
+        gradNoise = fract(gradNoise + 1.618);
+        float rot = gradNoise * 6.283;
+        float dist = (i + gradNoise) / 12.0;
+
+        vec2 offset2D = vec2(cos(rot), sin(rot)) * dist;
+        float offsetZ = -(dist * dist + 0.025);
+
+        vec3 offsetScale = vec3(0.002 / distortFactor, 0.002 / distortFactor, 0.001);
+
+        vec3 lowOffset = vec3(0.0, 0.0, -0.00025 * (1.0 + gradNoise) * distortFactor);
+        vec3 highOffset = vec3(offset2D, offsetZ) * offsetScale;
+
+        vec3 offset = highOffset * (subsurface * 0.75 + 0.25);
+
+        vec3 samplePos = shadowPos + offset;
+        float shadow0 = shadow2D(shadowtex0, samplePos).x;
+
+        vec3 shadowCol = vec3(0.0);
+        #ifdef SHADOW_COLOR
+        if (shadow0 < 1.0) {
+            shadowCol = texture2D(shadowcolor0, samplePos.st).rgb *
+                        shadow2D(shadowtex1, samplePos).x;
+        }
+        #endif
+
+        subsurfaceShadow += clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
+    }
+    subsurfaceShadow /= 12.0;
+    subsurfaceShadow *= subsurfaceShadow * sqrt(subsurface);
+
+    return subsurfaceShadow;
+}
+
+// vec3 GetSubsurfaceShadow(vec3 worldPos, float subsurface, float skylight) {
+//     float gradNoise = InterleavedGradientNoise();
+    
+//     vec3 shadowPos = ToShadow(worldPos);
+
+//     float distb = sqrt(dot(shadowPos.xy, shadowPos.xy));
+//     float distortFactor = distb * shadowMapBias + (1.0 - shadowMapBias);
+//     shadowPos = DistortShadow(shadowPos, distortFactor);
+
+//     vec3 subsurfaceShadow = vec3(0.0);
+
+//     for(int i = 0; i < 16; i++) {
+//         gradNoise = fract(gradNoise + 1.618);
+//         float rot = gradNoise * 6.283;
+//         float dist = (i + gradNoise) / 16.0;
+
+//         vec2 offset2D = vec2(cos(rot), sin(rot)) * dist;
+//         float offsetZ = -(dist + 0.05);
+
+//         vec3 offsetScale = vec3(0.001 / distortFactor, 0.001 / distortFactor, 0.0005);
+
+//         vec3 lowOffset = vec3(0.0, 0.0, -0.00025 * (1.0 + gradNoise) * distortFactor);
+//         vec3 highOffset = vec3(offset2D, offsetZ) * offsetScale;
+
+//         vec3 offset = mix(lowOffset, highOffset, subsurface);
+
+//         vec3 samplePos = shadowPos + offset;
+//         float shadow0 = shadow2D(shadowtex0, samplePos).x;
+//         shadow0 *= 1.0 - shadow2D(shadowtex0, shadowPos + offset * vec3(1,1,-1)).x;
+//         shadow0 *= 4.0;
+
+//         vec3 shadowCol = vec3(0.0);
+//         #ifdef SHADOW_COLOR
+//         if (shadow0 < 1.0) {
+//             shadowCol = texture2D(shadowcolor0, samplePos.st).rgb *
+//                         shadow2D(shadowtex1, samplePos).x *
+//                         (1.0 - shadow2D(shadowtex1, shadowPos + offset * vec3(1,1,-1)).x) * 4.0;
+//         }
+//         #endif
+
+//         subsurfaceShadow += clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
+//     }
+//     subsurfaceShadow /= 16.0;
+//     subsurfaceShadow *= subsurfaceShadow * sqrt(subsurface);
+
+//     return subsurfaceShadow;
+// }

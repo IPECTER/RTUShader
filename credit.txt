@@ -1,0 +1,3 @@
+Capt Tatsu/BSL Shaders : Base Shader
+LexBoosT/AstraLex Shaders: Hand Motion
+Septonious/Prismarine Shader: Reference

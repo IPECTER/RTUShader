@@ -30,7 +30,7 @@ uniform int frameCounter;
 uniform int isEyeInWater;
 uniform int worldTime;
 
-uniform float blindFactor, nightVision;
+uniform float blindFactor, darknessFactor, nightVision;
 uniform float far, near;
 uniform float frameTimeCounter;
 uniform float rainStrength;
@@ -204,7 +204,7 @@ void main() {
 	
 	#ifdef PARALLAX
 	if(skipAdvMat < 0.5) {
-		newCoord = GetParallaxCoord(parallaxFade, surfaceDepth);
+		newCoord = GetParallaxCoord(texCoord, parallaxFade, surfaceDepth);
 		albedo = texture2DGradARB(texture, newCoord, dcdx, dcdy) * vec4(color.rgb, 1.0);
 	}
 	#endif
@@ -219,10 +219,11 @@ void main() {
 		float glass 	  = float(mat > 1.98 && mat < 2.02);
 		float translucent = float(mat > 2.98 && mat < 3.02);
 		
-		float metalness      = 0.0;
-		float emission       = 0.0;
-		float subsurface     = translucent + water;
-		vec3 baseReflectance = vec3(0.04);
+		float metalness       = 0.0;
+		float emission        = 0.0;
+		float subsurface      = 0.0;
+		float basicSubsurface = water;
+		vec3 baseReflectance  = vec3(0.04);
 		
 		#ifndef REFLECTION_TRANSLUCENT
 		glass = 0.0;
@@ -256,6 +257,7 @@ void main() {
 		float f0 = 0.0, porosity = 0.5, ao = 1.0, skyOcclusion = 0.0;
 		GetMaterials(smoothness, metalness, f0, emission, subsurface, porosity, ao, normalMap,
 						newCoord, dcdx, dcdy);
+
 		if (water < 0.5) {		
 			if (normalMap.x > -0.999 && normalMap.y > -0.999)
 				newNormal = clamp(normalize(normalMap * tbnMatrix), vec3(-1.0), vec3(1.0));
@@ -330,7 +332,7 @@ void main() {
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, color.a, NoL, vanillaDiffuse,
-				    parallaxShadow, emission, subsurface);
+				    parallaxShadow, emission, subsurface, basicSubsurface);
 
 		#ifdef ADVANCED_MATERIALS
 		float puddles = 0.0;
@@ -383,11 +385,31 @@ void main() {
 			#endif
 			
 			if (reflection.a < 1.0) {
-				vec3 skyRefPos = reflect(normalize(viewPos), newNormal);
 				vec3 specularColor = GetSpecularColor(lightmap.y, 0.0, vec3(1.0));
 
 				#ifdef OVERWORLD
+				vec3 skyRefPos = reflect(normalize(viewPos), newNormal);
 				skyReflection = GetSkyColor(skyRefPos, true);
+				
+				#ifdef AURORA
+				skyReflection += DrawAurora(skyRefPos * 100.0, dither, 12);
+				#endif
+
+				#if CLOUDS == 1
+				vec4 cloud = DrawCloud(skyRefPos * 100.0, dither, lightCol, ambientCol);
+				skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
+				#endif
+
+				#ifdef CLASSIC_EXPOSURE
+				skyReflection *= 4.0 - 3.0 * eBS;
+				#endif
+				
+				float waterSkyOcclusion = lightmap.y;
+				#if REFLECTION_SKY_FALLOFF > 1
+				waterSkyOcclusion = clamp(1.0 - (1.0 - waterSkyOcclusion) * REFLECTION_SKY_FALLOFF, 0.0, 1.0);
+				#endif
+				waterSkyOcclusion *= waterSkyOcclusion;
+				skyReflection *= waterSkyOcclusion;
 				#endif
 
 				#ifdef NETHER
@@ -407,20 +429,7 @@ void main() {
 				float specularAlpha = mix(albedo.a , 1.0, fresnel) * fresnel;
 				#endif
 
-				skyReflection += specular / ((4.0 - 3.0 * eBS) * specularAlpha);
-				#endif
-
-				#ifdef OVERWORLD
-				#ifdef AURORA
-				skyReflection += DrawAurora(skyRefPos * 100.0, dither, 12);
-				#endif
-
-				#if CLOUDS == 1
-				vec4 cloud = DrawCloud(skyRefPos * 100.0, dither, lightCol, ambientCol);
-				skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
-				#endif
-
-				skyReflection *= (4.0 - 3.0 * eBS) * lightmap.y;
+				skyReflection += specular / specularAlpha;
 				#endif
 
 				skyReflection *= clamp(1.0 - isEyeInWater, 0.0, 1.0);
@@ -433,7 +442,11 @@ void main() {
 			#endif
 		}else{
 			#ifdef ADVANCED_MATERIALS
-			skyOcclusion = lightmap.y * lightmap.y * (3.0 - 2.0 * lightmap.y);
+			skyOcclusion = lightmap.y;
+			#if REFLECTION_SKY_FALLOFF > 1
+			skyOcclusion = clamp(1.0 - (1.0 - skyOcclusion) * REFLECTION_SKY_FALLOFF, 0.0, 1.0);
+			#endif
+			skyOcclusion *= skyOcclusion;
 
 			baseReflectance = mix(vec3(f0), rawAlbedo, metalness);
 
@@ -475,11 +488,11 @@ void main() {
 					skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
 					#endif
 
-					skyReflection = mix(
-						vanillaDiffuse * minLightCol,
-						skyReflection * (4.0 - 3.0 * eBS),
-						skyOcclusion
-					);
+					#ifdef CLASSIC_EXPOSURE
+					skyReflection *= 4.0 - 3.0 * eBS;
+					#endif
+
+					skyReflection = mix(vanillaDiffuse * minLightCol, skyReflection, skyOcclusion);
 					#endif
 
 					#ifdef NETHER
@@ -633,13 +646,14 @@ void main() {
 	#endif
     
 	color = gl_Color;
+
+	if(color.a < 0.1) color.a = 1.0;
 	
 	mat = 0.0;
 	
 	if (mc_Entity.x == 10300 || mc_Entity.x == 10303) mat = 1.0;
-	if (mc_Entity.x == 10301 || mc_Entity.x == 10304) mat = 2.0;
+	if (mc_Entity.x == 10301)						  mat = 2.0;
 	if (mc_Entity.x == 10302) 						  mat = 3.0;
-	if (mc_Entity.x == 10303 || mc_Entity.x == 10304) color.a = 1.0;
 
 	const vec2 sunRotationData = vec2(
 		 cos(sunPathRotation * 0.01745329251994),
@@ -654,9 +668,9 @@ void main() {
 
 	vec4 position = gbufferModelViewInverse * gl_ModelViewMatrix * gl_Vertex;
 	
-	#ifdef WAVING_LIQUID
+	#ifdef WAVING_WATER
 	float istopv = gl_MultiTexCoord0.t < mc_midTexCoord.t ? 1.0 : 0.0;
-	if (mc_Entity.x == 10300 || mc_Entity.x == 10302) position.y += WavingWater(position.xyz);
+	if (mc_Entity.x == 10300 || mc_Entity.x == 10302 || mc_Entity.x == 10303) position.y += WavingWater(position.xyz);
 	#endif
 
     #ifdef WORLD_CURVATURE

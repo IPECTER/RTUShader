@@ -123,14 +123,14 @@ void main() {
 	float parallaxFade = clamp((dist - PARALLAX_DISTANCE) / 32.0, 0.0, 1.0);
 
 	#if MC_VERSION >= 11300
-	float skipAdvMat = float(blockEntityId == 10401);
+	float skipAdvMat = float(blockEntityId == 10400);
 	#else
 	float skipAdvMat = float(blockEntityId == 63 || blockEntityId == 68);
 	#endif
 	
 	#ifdef PARALLAX
 	if (skipAdvMat < 0.5) {
-		newCoord = GetParallaxCoord(parallaxFade, surfaceDepth);
+		newCoord = GetParallaxCoord(texCoord, parallaxFade, surfaceDepth);
 		albedo = texture2DGradARB(texture, newCoord, dcdx, dcdy) * color;
 	}
 	#endif
@@ -139,15 +139,16 @@ void main() {
 	vec3 fresnel3 = vec3(0.0);
 	#endif
 
-	if(blockEntityId == 10402) albedo.a = 0.0;
+	if(blockEntityId == 10401) albedo.a = 0.0;
 
 	if (albedo.a > 0.001) {
 		vec2 lightmap = clamp(lmCoord, vec2(0.0), vec2(1.0));
 		
-		float metalness      = 0.0;
-		float emission       = float(blockEntityId == 10205);
-		float subsurface     = float(blockEntityId == 10109) * 0.5;
-		vec3 baseReflectance = vec3(0.04);
+		float metalness       = 0.0;
+		float emission        = float(blockEntityId == 10205);
+		float subsurface      = 0.0;
+		float basicSubsurface = float(blockEntityId == 10109) * 0.5;
+		vec3 baseReflectance  = vec3(0.04);
 		
 		emission *= dot(albedo.rgb, albedo.rgb) * 0.333;
 
@@ -236,10 +237,10 @@ void main() {
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, color.a, NoL, vanillaDiffuse,
-				    parallaxShadow, emission, subsurface);
+				    parallaxShadow, emission, subsurface, basicSubsurface);
 
 		#ifdef ADVANCED_MATERIALS
-		skyOcclusion = lightmap.y * lightmap.y * (3.0 - 2.0 * lightmap.y);
+		skyOcclusion = lightmap.y;
 
 		baseReflectance = mix(vec3(f0), rawAlbedo, metalness);
 		float fresnel = pow(clamp(1.0 + dot(newNormal, normalize(viewPos.xyz)), 0.0, 1.0), 5.0);
@@ -278,7 +279,7 @@ void main() {
 		#endif
 	}
 
-	if(blockEntityId == 10402) {
+	if(blockEntityId == 10401) {
 		vec2 portalCoord = gl_FragCoord.xy / vec2(viewWidth, viewHeight);
 		portalCoord = (portalCoord - 0.5) * vec2(aspectRatio, 1.0);
 
@@ -409,6 +410,8 @@ void main() {
 	#endif
     
 	color = gl_Color;
+
+	if(color.a < 0.1) color.a = 1.0;
 
 	const vec2 sunRotationData = vec2(cos(sunPathRotation * 0.01745329251994), -sin(sunPathRotation * 0.01745329251994));
 	float ang = fract(timeAngle - 0.25);

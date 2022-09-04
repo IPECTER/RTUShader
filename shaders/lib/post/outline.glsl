@@ -1,5 +1,5 @@
 void Outline(vec3 color, bool secondPass, out vec4 outerOutline, out vec4 innerOutline) {
-	float ph = ceil(viewHeight / 720.0) * 0.5 / viewHeight;
+	float ph = ceil(viewHeight / 1440.0) / viewHeight;
 	float pw = ph / aspectRatio;
 
 	float oOutlineMask = 1.0, iOutlineMask = 1.0, iBevel = 1.0;
@@ -9,7 +9,9 @@ void Outline(vec3 color, bool secondPass, out vec4 outerOutline, out vec4 innerO
 	float linZ = GetLinearDepth(z);
 	float minZ = z, maxZ = z;
 
-	for (int i = 0; i < 12; i++) {
+    int sampleCount = viewHeight >= 720.0 ? 12 : 4;
+
+	for (int i = 0; i < sampleCount; i++) {
 		vec2 offset = vec2(pw, ph) * outlineOffsets[i];
         float linSampleZSum = 0.0, linSampleZDiff = 0.0;
 

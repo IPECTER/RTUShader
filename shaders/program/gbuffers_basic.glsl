@@ -114,7 +114,7 @@ void main() {
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, 1.0, NoL, vanillaDiffuse,
-				    1.0, 0.0, 0.0);
+				    1.0, 0.0, 0.0, 0.0);
 
 		#if ALPHA_BLEND == 0
 		albedo.rgb = sqrt(max(albedo.rgb, vec3(0.0)));
@@ -154,6 +154,7 @@ uniform float timeAngle;
 uniform vec3 cameraPosition;
 
 uniform mat4 gbufferModelView, gbufferModelViewInverse;
+uniform mat4 gbufferProjectionInverse;
 
 #ifdef TAA
 uniform int frameCounter;
@@ -201,7 +202,7 @@ void main() {
 	eastVec = normalize(gbufferModelView[0].xyz);
 
     #ifdef WORLD_CURVATURE
-	vec4 position = gbufferModelViewInverse * gl_ModelViewMatrix * gl_Vertex;
+	vec4 position = gbufferModelViewInverse * gbufferProjectionInverse * ftransform();
 	position.y -= WorldCurvature(position.xz);
 	gl_Position = gl_ProjectionMatrix * gbufferModelView * position;
 	#else

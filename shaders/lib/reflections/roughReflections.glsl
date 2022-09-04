@@ -8,13 +8,15 @@ vec4 RoughReflection(vec3 viewPos, vec3 normal, float dither, float smoothness) 
     vec4 color = vec4(0.0);
 	float border = 0.0;
 
-    vec4 pos = Raytrace(depthtex0, viewPos, normal, dither, border, 4, 1.0, 0.1, 2.0);
+    vec4 pos = Raytrace(depthtex0, viewPos, normal, dither, border, 6, 0.5, 0.1, 1.8);
 	border = clamp(13.333 * (1.0 - border) * (0.9 * smoothness + 0.1), 0.0, 1.0);
+
+	float fovScale = gbufferProjection[1][1] / 1.37;
 	
 	if (pos.z < 1.0 - 1e-5) {
 		#ifdef REFLECTION_ROUGH
-		float dist = 1.0 - exp(-0.125 * (1.0 - smoothness) * pos.a);
-		float lod = log2(viewHeight / 8.0 * (1.0 - smoothness) * dist);
+		float dist = 0.03125 * pow(1.0 - smoothness, 2.0) * pos.a * fovScale;
+		float lod = log2(viewHeight * dist);
 		#else
 		float lod = 0.0;
 		#endif
@@ -57,7 +59,8 @@ vec4 RoughReflection(vec3 viewPos, vec3 normal, float dither, float smoothness) 
 		//Fog(color.rgb, (gbufferProjectionInverse * pos).xyz);
 		
 		color *= color.a;
-		color.a *= border;
+		color.a = clamp(color.a * 2.0 - 1.0, 0.0, 1.0) * border;
+		// color.a = pos.a * float(border > 0.0);
 	}
 	
     return color;

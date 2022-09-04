@@ -19,7 +19,8 @@ uniform int frameCounter;
 uniform int isEyeInWater;
 uniform int worldTime;
 
-uniform float blindFactor, nightVision;
+uniform float blindFactor, darknessFactor, nightVision;
+uniform float darknessLightFactor;
 uniform float far, near;
 uniform float frameTimeCounter;
 uniform float rainStrength;
@@ -134,6 +135,8 @@ void main() {
 	#else
 	vec3 vl = vec3(0.0);
     #endif
+
+	color.rgb *= clamp(1.0 - 2.0 * darknessLightFactor, 0.0, 1.0);
 
 	vec3 reflectionColor = pow(color.rgb, vec3(0.125)) * 0.5;
 	

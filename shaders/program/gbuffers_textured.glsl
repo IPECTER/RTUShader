@@ -22,7 +22,7 @@ uniform int frameCounter;
 uniform int isEyeInWater;
 uniform int worldTime;
 
-uniform float blindFactor, nightVision;
+uniform float blindFactor, darknessFactor, nightVision;
 uniform float far, near;
 uniform float frameTimeCounter;
 uniform float rainStrength;
@@ -131,7 +131,7 @@ void main() {
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, 1.0, NoL, 1.0,
-				    1.0, 0.0, 0.0);
+				    1.0, 0.0, 0.0, 0.0);
 
 		#if defined FOG && MC_VERSION >= 11500
 		Fog(albedo.rgb, viewPos);

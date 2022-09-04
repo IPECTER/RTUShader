@@ -18,7 +18,7 @@ varying vec3 upVec, sunVec;
 uniform int isEyeInWater;
 uniform int worldTime;
 
-uniform float blindFactor;
+uniform float blindFactor, darknessFactor;
 uniform float frameCounter;
 uniform float frameTimeCounter;
 uniform float nightVision;
@@ -71,7 +71,7 @@ void SunGlare(inout vec3 color, vec3 viewPos, vec3 lightCol) {
 	float visibility = clamp(VoL * 0.5 + 0.5, 0.0, 1.0);
     visibility = visfactor / (1.0 - invvisfactor * visibility) - visfactor;
 	visibility = clamp(visibility * 1.015 / invvisfactor - 0.015, 0.0, 1.0);
-	visibility = mix(1.0, visibility, 0.25 * eBS + 0.75) * (1.0 - rainStrength * eBS * 0.875);
+	visibility = mix(1.0, visibility, 0.03125 * eBS + 0.96875) * (1.0 - rainStrength * eBS * 0.875);
 	visibility *= shadowFade * LIGHT_SHAFT_STRENGTH;
 	//visibility *= voidFade;
 	#if MC_VERSION >= 11800
@@ -128,7 +128,10 @@ void main() {
 
 	SunGlare(albedo, viewPos.xyz, lightCol);
 
-	albedo.rgb *= (4.0 - 3.0 * eBS) * (1.0 + nightVision);
+	albedo.rgb *= 1.0 + nightVision;
+	#ifdef CLASSIC_EXPOSURE
+	albedo.rgb *= 4.0 - 3.0 * eBS;
+	#endif
 
 	#if ALPHA_BLEND == 0
 	albedo.rgb = sqrt(max(albedo.rgb, vec3(0.0)));

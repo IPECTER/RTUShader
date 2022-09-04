@@ -18,7 +18,7 @@ varying vec3 sunVec, upVec;
 uniform int isEyeInWater;
 uniform int worldTime;
 
-uniform float blindFactor;
+uniform float blindFactor, darknessFactor;
 uniform float rainStrength;
 uniform float shadowFade, voidFade;
 uniform float timeAngle, timeBrightness;
@@ -54,7 +54,7 @@ void main() {
 	#endif
 
     vl *= LIGHT_SHAFT_STRENGTH * (1.0 - rainStrength * eBS * 0.875) * shadowFade *
-		  (1.0 - blindFactor);
+		  (1.0 - max(blindFactor, darknessFactor));
 	
 	color.rgb += vl;
 	

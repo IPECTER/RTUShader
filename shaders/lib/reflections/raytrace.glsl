@@ -10,8 +10,16 @@ float cdist(vec2 coord) {
 	return max(abs(coord.x - 0.5), abs(coord.y - 0.5)) * 1.85;
 }
 
+#if REFLECTION_MODE == 0
+float errMult = 1.0;
+#elif REFLECTION_MODE == 1
+float errMult = 1.3;
+#else
+float errMult = 1.6;
+#endif
+
 vec4 Raytrace(sampler2D depthtex, vec3 viewPos, vec3 normal, float dither, out float border, 
-			  float maxf, float stp, float ref, float inc) {
+			  int maxf, float stp, float ref, float inc) {
 	vec3 pos = vec3(0.0);
 	float dist = 0.0;
 	
@@ -19,7 +27,7 @@ vec4 Raytrace(sampler2D depthtex, vec3 viewPos, vec3 normal, float dither, out f
 	dither = fract(dither + frameTimeCounter);
 	#endif
 
-	vec3 start = viewPos;
+	vec3 start = viewPos + normal * 0.035;
 
     vec3 vector = stp * reflect(normalize(viewPos), normalize(normal));
     viewPos += vector;
@@ -33,10 +41,11 @@ vec4 Raytrace(sampler2D depthtex, vec3 viewPos, vec3 normal, float dither, out f
 
 		vec3 rfragpos = vec3(pos.xy, texture2D(depthtex,pos.xy).r);
         rfragpos = nvec3(gbufferProjectionInverse * nvec4(rfragpos * 2.0 - 1.0));
-		dist = length(start - rfragpos);
+		dist = abs(dot(start - rfragpos, normal));
 
         float err = length(viewPos - rfragpos);
-		if (err < pow(length(vector) * pow(length(tvector), 0.11), 1.1) * 1.2) {
+		float lVector = length(vector) * pow(length(tvector), 0.1) * errMult;
+		if (err < lVector) {
 			sr++;
 			if (sr >= maxf) break;
 			tvector -= vector;
@@ -44,7 +53,7 @@ vec4 Raytrace(sampler2D depthtex, vec3 viewPos, vec3 normal, float dither, out f
 		}
         vector *= inc;
         tvector += vector;
-		viewPos = start + tvector * (dither * 0.05 + 0.975);
+		viewPos = start + tvector * (0.025 * dither + 0.975);
     }
 
 	border = cdist(pos.st);

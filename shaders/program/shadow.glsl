@@ -35,8 +35,8 @@ void main() {
 	if (disable > 0.5 || albedo.a < 0.01) discard;
 
     #ifdef SHADOW_COLOR
-	albedo.rgb = mix(vec3(1.0), albedo.rgb, 1.0 - pow(1.0 - albedo.a, 3.0));
-	albedo.rgb *= 1.0 - pow(albedo.a, 64.0);
+	albedo.rgb = mix(vec3(1.0), albedo.rgb, 1.0 - pow(1.0 - albedo.a, 1.5));
+	albedo.rgb *= 1.0 - pow(albedo.a, 96.0);
 	#else
 	if ((premult > 0.5 && albedo.a < 0.98)) albedo.a = 0.0;
 	#endif
@@ -93,7 +93,7 @@ void main() {
 	
 	mat = 0;
 	if (mc_Entity.x == 10301 || mc_Entity.x == 10302) mat = 1;
-	if (mc_Entity.x == 10300 || mc_Entity.x == 10303 || mc_Entity.x == 10204) mat = 2;
+	if (mc_Entity.x == 10300 || mc_Entity.x == 10303) mat = 2;
 	
 	vec4 position = shadowModelViewInverse * shadowProjectionInverse * ftransform();
 	

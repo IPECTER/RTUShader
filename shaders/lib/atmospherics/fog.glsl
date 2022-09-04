@@ -8,12 +8,12 @@ vec3 GetFogColor(vec3 viewPos) {
     float VoL = clamp(dot(nViewPos, sunVec), -1.0, 1.0);
 
 	float density = 0.4;
-    float nightDensity = 0.65;
+    float nightDensity = 1.0;
     float weatherDensity = 1.5;
     float groundDensity = 0.08 * (4.0 - 3.0 * sunVisibility) *
                           (10.0 * rainStrength * rainStrength + 1.0);
     
-    float exposure = exp2(timeBrightness * 0.75 - 1.00);
+    float exposure = exp2(timeBrightness * 0.75 - 0.75);
     float nightExposure = exp2(-3.5);
 
 	float baseGradient = exp(-(VoU * 0.5 + 0.5) * 0.5 / density);
@@ -26,7 +26,7 @@ vec3 GetFogColor(vec3 viewPos) {
 
 	float sunMix = (VoL * 0.5 + 0.5) * pow(clamp(1.0 - VoU, 0.0, 1.0), 2.0 - sunVisibility) *
                    pow(1.0 - timeBrightness * 0.6, 3.0);
-    float horizonMix = pow(1.0 - abs(VoU), 2.5) * 0.125 * (1.0 - timeBrightness * 0.5);
+    float horizonMix = pow(1.0 - abs(VoU), 2.5) * 0.125;
     float lightMix = (1.0 - (1.0 - sunMix) * (1.0 - horizonMix)) * lViewPos;
 
 	vec3 lightFog = pow(lightSun, vec3(4.0 - sunVisibility)) * baseGradient;
@@ -90,7 +90,11 @@ void NormalFog(inout vec3 color, vec3 viewPos) {
 	
 		if(vanillaFog > 0.0){
 			vec3 vanillaFogColor = GetSkyColor(viewPos, false);
-			vanillaFogColor *= (4.0 - 3.0 * eBS) * (1.0 + nightVision);
+			
+			vanillaFogColor *= 1.0 + nightVision;
+			#ifdef CLASSIC_EXPOSURE
+			vanillaFogColor *= 4.0 - 3.0 * eBS;
+			#endif
 
 			fogColor *= fog;
 			
@@ -127,8 +131,8 @@ void NormalFog(inout vec3 color, vec3 viewPos) {
 }
 
 void BlindFog(inout vec3 color, vec3 viewPos) {
-	float fog = length(viewPos) * (blindFactor * 0.2);
-	fog = (1.0 - exp(-6.0 * fog * fog * fog)) * blindFactor;
+	float fog = length(viewPos) * max(blindFactor * 0.2, darknessFactor * 0.075);
+	fog = (1.0 - exp(-6.0 * fog * fog * fog)) * max(blindFactor, darknessFactor);
 	color = mix(color, vec3(0.0), fog);
 }
 
@@ -146,5 +150,5 @@ void DenseFog(inout vec3 color, vec3 viewPos) {
 void Fog(inout vec3 color, vec3 viewPos) {
 	NormalFog(color, viewPos);
 	if (isEyeInWater > 1) DenseFog(color, viewPos);
-	if (blindFactor > 0.0) BlindFog(color, viewPos);
+	if (blindFactor > 0.0 || darknessFactor > 0.0) BlindFog(color, viewPos);
 }

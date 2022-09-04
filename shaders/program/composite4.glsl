@@ -24,7 +24,8 @@ const bool colortex0MipmapEnabled = true;
 float ph = 0.8 / min(360.0, viewHeight);
 float pw = ph / aspectRatio;
 
-float weight[5] = float[5](1.0, 4.0, 6.0, 4.0, 1.0);
+float weight[6] = float[6](0.0556, 0.1667, 0.2777, 0.2777, 0.1667, 0.0556);
+// float weight[7] = float[7](0.0315, 0.1102, 0.2205, 0.2756, 0.2205, 0.1102, 0.0315);
 
 //Common Functions//
 vec3 BloomTile(float lod, vec2 coord, vec2 offset) {
@@ -34,15 +35,14 @@ vec3 BloomTile(float lod, vec2 coord, vec2 offset) {
 	float padding = 0.5 + 0.005 * scale;
 
 	if (abs(coord.x - 0.5) < padding && abs(coord.y - 0.5) < padding) {
-		for(int i = 0; i < 5; i++) {
-			for(int j = 0; j < 5; j++) {
+		for(int i = 0; i < 6; i++) {
+			for(int j = 0; j < 6; j++) {
 				float wg = weight[i] * weight[j];
-				vec2 pixelOffset = vec2((float(i) - 2.0) * pw, (float(j) - 2.0) * ph);
+				vec2 pixelOffset = vec2((float(i) - 2.5) * pw, (float(j) - 2.5) * ph);
 				vec2 sampleCoord = coord + pixelOffset * scale;
 				bloom += texture2D(colortex0, sampleCoord).rgb * wg;
 			}
 		}
-		bloom /= 256.0;
 	}
 
 	return pow(bloom / 32.0, vec3(0.25));

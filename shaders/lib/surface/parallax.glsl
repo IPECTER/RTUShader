@@ -3,8 +3,13 @@ vec4 ReadNormal(vec2 coord) {
 	return texture2DGradARB(normals, coord, dcdx, dcdy);
 }
 
-vec2 GetParallaxCoord(float parallaxFade, out float surfaceDepth) {
+vec2 GetParallaxCoord(vec2 texCoord, float parallaxFade, out float surfaceDepth) {
     vec2 coord = vTexCoord.st;
+    surfaceDepth = 1.0;
+
+    if (viewVector != viewVector) {
+        return texCoord;
+    }
 
     float sampleStep = 1.0 / PARALLAX_QUALITY;
     float currentStep = 1.0;

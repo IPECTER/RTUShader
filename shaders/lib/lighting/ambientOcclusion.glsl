@@ -22,7 +22,7 @@ float AmbientOcclusion(float dither) {
 	float fovScale = gbufferProjection[1][1] / 1.37;
 	float distScale = max((far - near) * depth + near, 5.0);
 	vec2 scale = radius * vec2(1.0 / aspectRatio, 1.0) * fovScale / distScale;
-	float mult = (0.7 / radius) * (far - near) * (hand > 0.5 ? 1024.0 : 1.0);
+	float mult = (0.5 / radius) * (far - near) * (hand > 0.5 ? 1024.0 : 1.0);
 
 	for(int i = 0; i < 4; i++) {
 		vec2 offset = OffsetDist(currentStep) * scale;
@@ -30,7 +30,7 @@ float AmbientOcclusion(float dither) {
 
 		for(int i = 0; i < 2; i++){
 			float sampleDepth = GetLinearDepth(texture2D(depthtex0, texCoord + offset).r);
-			float sample = (depth - sampleDepth) * mult;
+			float sample = (depth - sampleDepth) * mult / currentStep;
 			angle += clamp(0.5 - sample, 0.0, 1.0);
 			dist += clamp(0.25 * sample - 1.0, 0.0, 1.0);
 			offset = -offset;

@@ -18,7 +18,7 @@ varying vec3 sunVec, upVec, eastVec;
 uniform int frameCounter;
 uniform int isEyeInWater;
 
-uniform float blindFactor, nightVision;
+uniform float blindFactor, darknessFactor, nightVision;
 uniform float far, near;
 uniform float frameTimeCounter;
 uniform float rainStrength;
@@ -169,8 +169,8 @@ void GlowOutline(inout vec3 color){
 
 //Program//
 void main() {
-    vec4 color      = texture2D(colortex0, texCoord);
-	float z         = texture2D(depthtex0, texCoord).r;
+    vec4 color = texture2D(colortex0, texCoord);
+	float z = texture2D(depthtex0, texCoord).r;
 
 	float dither = Bayer64(gl_FragCoord.xy);
 
@@ -231,11 +231,11 @@ void main() {
 									   (0.5 - abs(NoE)) * (1.0 - abs(NoU)) * 0.1;
 				vanillaDiffuse *= vanillaDiffuse;
 
-				skyReflection = mix(
-					vanillaDiffuse * minLightCol,
-					skyReflection * (4.0 - 3.0 * eBS),
-					skyOcclusion
-				);
+				#ifdef CLASSIC_EXPOSURE
+				skyReflection *= 4.0 - 3.0 * eBS;
+				#endif
+
+				skyReflection = mix(vanillaDiffuse * minLightCol, skyReflection, skyOcclusion);
 				#endif
 				#ifdef NETHER
 				skyReflection = netherCol.rgb * 0.04;
@@ -274,7 +274,7 @@ void main() {
 			#endif
 		}
 
-		if (blindFactor > 0.0) color.rgb *= 1.0 - blindFactor;
+		if (blindFactor > 0.0 || darknessFactor > 0.0) color.rgb *= 1.0 - max(blindFactor, darknessFactor);
 	}
 
 	#ifdef OUTLINE_ENABLED

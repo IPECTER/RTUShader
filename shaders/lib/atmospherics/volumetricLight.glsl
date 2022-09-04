@@ -41,7 +41,7 @@ vec3 GetLightShafts(float pixeldepth0, float pixeldepth1, vec3 color, float dith
 	vec3 vl = vec3(0.0);
 
 	#ifdef TAA
-	dither = fract(dither + frameCounter / 32.0);
+	dither = fract(dither + frameCounter * 1.618);
 	#endif
 	
 	vec3 screenPos = vec3(texCoord, pixeldepth0);
@@ -58,7 +58,7 @@ vec3 GetLightShafts(float pixeldepth0, float pixeldepth1, vec3 color, float dith
 	float visibility = clamp(VoL * 0.5 + 0.5, 0.0, 1.0);
 	visibility = visfactor / (1.0 - invvisfactor * visibility) - visfactor;
 	visibility = clamp(visibility * 1.015 / invvisfactor - 0.015, 0.0, 1.0);
-	visibility = mix(1.0, visibility, 0.25 * eBS + 0.75);
+	visibility = mix(1.0, visibility, 0.03125 * eBS + 0.96875);
 	#endif
 	
 	#ifdef END
@@ -105,6 +105,10 @@ vec3 GetLightShafts(float pixeldepth0, float pixeldepth1, vec3 color, float dith
 					}
 				}
 				#endif
+
+				shadow0 *= shadow0;
+				shadowCol *= shadowCol;
+				
 				vec3 shadow = clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
 
 				if (depth0 < minDist) shadow *= color;

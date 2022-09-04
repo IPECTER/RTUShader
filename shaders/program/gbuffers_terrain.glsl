@@ -133,7 +133,7 @@ void main() {
 	
 	#ifdef PARALLAX
 	if(skipAdvMat < 0.5) {
-		newCoord = GetParallaxCoord(parallaxFade, surfaceDepth);
+		newCoord = GetParallaxCoord(texCoord, parallaxFade, surfaceDepth);
 		albedo = texture2DGradARB(texture, newCoord, dcdx, dcdy) * vec4(color.rgb, 1.0);
 	}
 	#endif
@@ -151,10 +151,11 @@ void main() {
 		float lava     = float(mat > 3.98 && mat < 4.02);
 		float candle   = float(mat > 4.98 && mat < 5.02);
 
-		float metalness      = 0.0;
-		float emission       = (emissive + candle + lava) * 0.4;
-		float subsurface     = (foliage + candle) * 0.5 + leaves;
-		vec3 baseReflectance = vec3(0.04);
+		float metalness       = 0.0;
+		float emission        = (emissive + candle + lava) * 0.4;
+		float subsurface      = 0.0;
+		float basicSubsurface = (foliage + candle) * 0.5 + leaves;
+		vec3 baseReflectance  = vec3(0.04);
 		
 		emission *= dot(albedo.rgb, albedo.rgb) * 0.333;
 		
@@ -171,7 +172,7 @@ void main() {
 		vec3 normalMap = vec3(0.0, 0.0, 1.0);
 		GetMaterials(smoothness, metalness, f0, emission, subsurface, porosity, ao, normalMap,
 					 newCoord, dcdx, dcdy);
-		
+					 
 		mat3 tbnMatrix = mat3(tangent.x, binormal.x, normal.x,
 							  tangent.y, binormal.y, normal.y,
 							  tangent.z, binormal.z, normal.z);
@@ -266,7 +267,7 @@ void main() {
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, color.a, NoL, vanillaDiffuse,
-					parallaxShadow, emission, subsurface);
+					parallaxShadow, emission, subsurface, basicSubsurface);
 					
 		#ifdef ADVANCED_MATERIALS
 		float puddles = 0.0;
@@ -303,7 +304,7 @@ void main() {
 		}
 		#endif
 
-		skyOcclusion = lightmap.y * lightmap.y * (3.0 - 2.0 * lightmap.y);
+		skyOcclusion = lightmap.y;
 		
 		baseReflectance = mix(vec3(f0), rawAlbedo, metalness);
 		float fresnel = pow(clamp(1.0 + dot(outNormal, normalize(viewPos.xyz)), 0.0, 1.0), 5.0);
@@ -478,7 +479,7 @@ void main() {
 	if (mc_Entity.x == 10203)
 		lmCoord.x += 0.0667;
 
-	if (mc_Entity.x == 10400)
+	if (color.a < 0.1)
 		color.a = 1.0;
 
 	const vec2 sunRotationData = vec2(cos(sunPathRotation * 0.01745329251994), -sin(sunPathRotation * 0.01745329251994));

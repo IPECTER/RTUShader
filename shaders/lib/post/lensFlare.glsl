@@ -51,7 +51,7 @@ vec3 LensTint(vec3 lens, float truePos) {
 	float isMoon = truePos * 0.5 + 0.5;
 
 	float visibility = mix(sunVisibility,moonVisibility, isMoon);
-	lens = mix(lens, GetLuminance(lens) * lightNight * 0.5, isMoon * 0.98);
+	lens = mix(lens, GetLuminance(lens) * lightNight, isMoon * 0.98);
 	return lens * visibility;
 }
 

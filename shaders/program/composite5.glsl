@@ -18,7 +18,7 @@ varying vec3 sunVec, upVec;
 uniform int isEyeInWater;
 uniform int worldTime;
 
-uniform float blindFactor;
+uniform float blindFactor, darknessFactor;
 uniform float frameTimeCounter;
 uniform float rainStrength;
 uniform float timeAngle, timeBrightness;
@@ -94,47 +94,47 @@ void RetroDither(inout vec3 color, float dither) {
 vec3 GetBloomTile(float lod, vec2 coord, vec2 offset) {
 	float scale = exp2(lod);
 	float resScale = 1.25 * min(360.0, viewHeight) / viewHeight;
-	vec2 centerOffset = vec2(0.125 * pw, 0.125 * ph);
+	vec2 centerOffset = vec2(0.125 * pw, 0.25 * ph);
 	vec3 bloom = texture2D(colortex1, (coord / scale + offset) * resScale + centerOffset).rgb;
 	bloom *= bloom; bloom *= bloom * 32.0;
 	return bloom;
 }
 
 void Bloom(inout vec3 color, vec2 coord) {
-	vec3 blur1 = GetBloomTile(1.0, coord, vec2(0.0      , 0.0   )) * 1.5;
-	vec3 blur2 = GetBloomTile(2.0, coord, vec2(0.51     , 0.0   )) * 1.2;
+	vec3 blur1 = GetBloomTile(1.0, coord, vec2(0.0      , 0.0   ));
+	vec3 blur2 = GetBloomTile(2.0, coord, vec2(0.51     , 0.0   ));
 	vec3 blur3 = GetBloomTile(3.0, coord, vec2(0.51     , 0.26  ));
 	vec3 blur4 = GetBloomTile(4.0, coord, vec2(0.645    , 0.26  ));
 	vec3 blur5 = GetBloomTile(5.0, coord, vec2(0.7175   , 0.26  ));
-	vec3 blur6 = GetBloomTile(6.0, coord, vec2(0.645    , 0.3325)) * 0.9;
-	vec3 blur7 = GetBloomTile(7.0, coord, vec2(0.670625 , 0.3325)) * 0.7;
+	vec3 blur6 = GetBloomTile(6.0, coord, vec2(0.645    , 0.3325));
+	vec3 blur7 = GetBloomTile(7.0, coord, vec2(0.670625 , 0.3325));
 	
 	#ifdef DIRTY_LENS
 	float newAspectRatio = 1.777777777777778 / aspectRatio;
 	vec2 scale = vec2(max(newAspectRatio, 1.0), max(1.0 / newAspectRatio, 1.0));
 	float dirt = texture2D(depthtex2, (coord - 0.5) / scale + 0.5).r;
 	dirt *= length(blur6 / (1.0 + blur6));
-	blur3 *= dirt *  1.0 + 1.0;
-	blur4 *= dirt *  2.0 + 1.0;
-	blur5 *= dirt *  4.0 + 1.0;
-	blur6 *= dirt *  8.0 + 1.0;
-	blur7 *= dirt * 16.0 + 1.0;
+	blur3 *= dirt *  2.0 + 1.0;
+	blur4 *= dirt *  4.0 + 1.0;
+	blur5 *= dirt *  8.0 + 1.0;
+	blur6 *= dirt * 16.0 + 1.0;
+	blur7 *= dirt * 32.0 + 1.0;
 	#endif
 
 	#if BLOOM_RADIUS == 1
-	vec3 blur = blur1 * 0.667;
+	vec3 blur = blur1;
 	#elif BLOOM_RADIUS == 2
-	vec3 blur = (blur1 + blur2) * 0.37;
+	vec3 blur = (blur1 * 1.18 + blur2) / 2.18;
 	#elif BLOOM_RADIUS == 3
-	vec3 blur = (blur1 + blur2 + blur3) * 0.27;
+	vec3 blur = (blur1 * 1.57 + blur2 * 1.41 + blur3) / 3.98;
 	#elif BLOOM_RADIUS == 4
-	vec3 blur = (blur1 + blur2 + blur3 + blur4) * 0.212;
+	vec3 blur = (blur1 * 2.11 + blur2 * 1.97 + blur3 * 1.57 + blur4) / 6.65;
 	#elif BLOOM_RADIUS == 5
-	vec3 blur = (blur1 + blur2 + blur3 + blur4 + blur5) * 0.175;
+	vec3 blur = (blur1 * 2.89 + blur2 * 2.74 + blur3 * 2.30 + blur4 * 1.68 + blur5) / 10.61;
 	#elif BLOOM_RADIUS == 6
-	vec3 blur = (blur1 + blur2 + blur3 + blur4 + blur5 + blur6) * 0.151;
+	vec3 blur = (blur1 * 3.98 + blur2 * 3.81 + blur3 * 3.31 + blur4 * 2.59 + blur5 * 1.78 + blur6) / 16.47;
 	#elif BLOOM_RADIUS == 7
-	vec3 blur = (blur1 + blur2 + blur3 + blur4 + blur5 + blur6 + blur7) * 0.137;
+	vec3 blur = (blur1 * 5.51 + blur2 * 5.30 + blur3 * 4.71 + blur4 * 3.85 + blur5 * 2.85 + blur6 * 1.86 + blur7) / 25.08;
 	#endif
 
 	#if BLOOM_CONTRAST == 0
@@ -147,15 +147,16 @@ void Bloom(inout vec3 color, vec2 coord) {
 	color = mix(color, blur, bloomStrength);
 	color = pow(color, 1.0 / bloomContrast);
 	#endif
+	
 }
 
 void AutoExposure(inout vec3 color, inout float exposure, float tempExposure) {
 	float exposureLod = log2(viewHeight * 0.7);
 	
 	exposure = length(texture2DLod(colortex0, vec2(0.5), exposureLod).rgb);
-	exposure = clamp(exposure, 0.0001, 10.0);
+	exposure = max(exposure, 0.0001);
 	
-	color /= 2.0 * clamp(tempExposure, 0.001, 10.0) + 0.125;
+	color /= 2.0 * tempExposure + 0.125;
 }
 
 void ColorGrading(inout vec3 color) {
@@ -212,7 +213,10 @@ vec2 GetLightPos() {
 //Program//
 void main() {
     vec2 newTexCoord = texCoord;
+
+	#ifdef UNDERWATER_DISTORTION
 	if (isEyeInWater == 1.0) UnderwaterDistort(newTexCoord);
+	#endif
 	
 	vec3 color = texture2D(colortex0, newTexCoord).rgb;
 	
@@ -247,6 +251,10 @@ void main() {
 	ColorGrading(color);
 	#endif
 	
+    #ifdef VIGNETTE
+    color *= 1.0 - length(texCoord - 0.5) * VIGNETTE_STRENGTH;
+	#endif
+	
 	BSLTonemap(color);
 	
 	#ifdef LENS_FLARE
@@ -254,13 +262,13 @@ void main() {
 	float truePos = sign(sunVec.z);
 	      
     float visibleSun = float(texture2D(depthtex0, lightPos + 0.5).r >= 1.0);
-	visibleSun *= max(1.0 - isEyeInWater, eBS) * (1.0 - blindFactor) * (1.0 - rainStrength);
+	visibleSun *= max(1.0 - isEyeInWater, eBS) * (1.0 - max(blindFactor, darknessFactor)) * (1.0 - rainStrength);
 
 	#ifdef UNDERGROUND_SKY
 	visibleSun *= mix(clamp((cameraPosition.y - 48.0) / 16.0, 0.0, 1.0), 1.0, eBS);
 	#endif
 	
-	float multiplier = tempVisibleSun * LENS_FLARE_STRENGTH * 0.5;
+	float multiplier = tempVisibleSun * LENS_FLARE_STRENGTH * (length(color) * 0.25 + 0.25);
 
 	if (multiplier > 0.001) LensFlare(color, lightPos, truePos, multiplier);
 	#endif
@@ -275,10 +283,6 @@ void main() {
 	#ifdef LENS_FLARE
 	if (texCoord.x > 2.0 * pw && texCoord.x < 4.0 * pw && texCoord.y < 2.0 * ph)
 		temporalData = mix(tempVisibleSun, visibleSun, 0.125);
-	#endif
-	
-    #ifdef VIGNETTE
-    color *= 1.0 - length(texCoord - 0.5) * (1.0 - GetLuminance(color));
 	#endif
 	
 	color = pow(color, vec3(1.0 / 2.2));
