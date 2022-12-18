@@ -177,7 +177,7 @@ void main() {
 							  tangent.y, binormal.y, normal.y,
 							  tangent.z, binormal.z, normal.z);
 
-		if (normalMap.x > -0.999 && normalMap.y > -0.999)
+		if ((normalMap.x > -0.999 || normalMap.y > -0.999) && viewVector == viewVector)
 			newNormal = clamp(normalize(normalMap * tbnMatrix), vec3(-1.0), vec3(1.0));
 		#endif
 		
@@ -334,7 +334,7 @@ void main() {
 		
 		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR && defined REFLECTION_ROUGH
 		newNormal = outNormal;
-		if (normalMap.x > -0.999 && normalMap.y > -0.999) {
+		if ((normalMap.x > -0.999 || normalMap.y > -0.999) && viewVector == viewVector) {
 			normalMap = mix(vec3(0.0, 0.0, 1.0), normalMap, smoothness);
 			newNormal = mix(normalMap * tbnMatrix, newNormal, 1.0 - pow(1.0 - puddles, 4.0));
 			newNormal = clamp(normalize(newNormal), vec3(-1.0), vec3(1.0));
@@ -441,6 +441,9 @@ void main() {
 						  tangent.z, binormal.z, normal.z);
 								  
 	viewVector = tbnMatrix * (gl_ModelViewMatrix * gl_Vertex).xyz;
+
+	if (mc_Entity.x == 0)
+		viewVector /= 0.0;
 	
 	dist = length(gl_ModelViewMatrix * gl_Vertex);
 

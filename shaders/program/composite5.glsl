@@ -70,7 +70,7 @@ void UnderwaterDistort(inout vec2 texCoord) {
 	texCoord += vec2(
 		cos(texCoord.y * 32.0 + frameTimeCounter * 3.0),
 		sin(texCoord.x * 32.0 + frameTimeCounter * 1.7)
-	) * 0.0005;
+	) * 0.001;
 
 	float mask = float(
 		texCoord.x > 0.0 && texCoord.x < 1.0 &&
@@ -252,7 +252,9 @@ void main() {
 	#endif
 	
     #ifdef VIGNETTE
-    color *= 1.0 - length(texCoord - 0.5) * VIGNETTE_STRENGTH;
+	float screenDist = length(texCoord - 0.5);
+	screenDist *= screenDist * 0.3535 + 0.75;
+    color *= 1.0 - screenDist * VIGNETTE_STRENGTH;
 	#endif
 	
 	BSLTonemap(color);

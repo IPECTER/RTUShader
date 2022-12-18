@@ -23,10 +23,16 @@ uniform int worldTime;
 
 uniform float rainStrength;
 uniform float timeAngle, timeBrightness;
+uniform float viewWidth, viewHeight;
 
 uniform ivec2 eyeBrightnessSmooth;
 
 uniform sampler2D texture;
+
+uniform mat4 gbufferProjectionInverse;
+uniform mat4 gbufferModelViewInverse;
+uniform mat4 shadowProjection;
+uniform mat4 shadowModelView;
 
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
@@ -35,6 +41,11 @@ float moonVisibility = clamp((dot(-sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
 
 //Includes//
 #include "/lib/color/lightColor.glsl"
+#include "/lib/util/spaceConversion.glsl"
+
+#ifdef TAA
+#include "/lib/util/jitter.glsl"
+#endif
 
 //Program//
 void main() {
@@ -45,10 +56,28 @@ void main() {
 	vec4 albedo = texture2D(texture, texCoord);
 	albedo.rgb = pow(albedo.rgb,vec3(2.2));
 	
-	float vanillaDiffuse = clamp(0.25 * dot(normal, upVec) + 0.75, 0.5, 1.0);
-	albedo.rgb *= lightCol * (vanillaDiffuse * (0.3 * sunVisibility + 0.2));
+	float NoU = clamp(dot(normal, upVec), -1.0, 1.0);
+	float NoE = clamp(dot(normal, eastVec), -1.0, 1.0);
+	float vanillaDiffuse = (0.25 * NoU + 0.75) + (-0.333 + abs(NoE)) * (1.0 - abs(NoU)) * 0.15;
+		  vanillaDiffuse = mix(vanillaDiffuse, 0.75, rainStrength * 0.75);
+		  vanillaDiffuse*= vanillaDiffuse;
+
+	albedo.rgb *= lightCol * vanillaDiffuse;
+	albedo.rgb *= mix(0.4 - 0.25 * rainStrength, 0.5 - 0.425 * rainStrength, sunVisibility);
 	
-	albedo.a *= 0.5 * color.a;
+	vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), gl_FragCoord.z);
+	#ifdef TAA
+	vec3 viewPos = ToNDC(vec3(TAAJitter(screenPos.xy, -0.5), screenPos.z));
+	#else
+	vec3 viewPos = ToNDC(screenPos);
+	#endif
+	vec3 worldPos = ToWorld(viewPos);
+
+	float worldDistance = length(worldPos) / 256.0;
+	float distantFade = 1.0 - smoothstep(0.6, 1.1, worldDistance);
+	
+	// albedo.rgb *= distantFade;
+	albedo.a *= color.a * distantFade;
 
 	#if ALPHA_BLEND == 0
 	albedo.rgb = sqrt(max(albedo.rgb, vec3(0.0)));

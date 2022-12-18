@@ -112,6 +112,11 @@ float GetLuminance(vec3 color) {
 #undef SELF_SHADOW
 #endif
 
+#if MC_VERSION <= 10710
+#undef PARALLAX
+#undef SELF_SHADOW
+#endif
+
 //Program//
 void main() {
     vec4 albedo = texture2D(texture, texCoord) * color;
@@ -135,7 +140,9 @@ void main() {
 	vec3 fresnel3 = vec3(0.0);
 	#endif
 
+	#ifdef ENTITY_FLASH
 	albedo.rgb = mix(albedo.rgb, entityColor.rgb, entityColor.a);
+	#endif
 	
 	float lightningBolt = float(entityId == 10101);
 	if(lightningBolt > 0.5) {
@@ -162,6 +169,10 @@ void main() {
 		
 		emission *= dot(albedo.rgb, albedo.rgb) * 0.333;
 
+		#ifndef ENTITY_FLASH
+		emission = 0.0;
+		#endif
+
 		vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), gl_FragCoord.z);
 		#ifdef TAA
 		vec3 viewPos = ToNDC(vec3(TAAJitter(screenPos.xy, -0.5), screenPos.z));
@@ -185,7 +196,7 @@ void main() {
 							  tangent.y, binormal.y, normal.y,
 							  tangent.z, binormal.z, normal.z);
 
-		if (normalMap.x > -0.999 && normalMap.y > -0.999 && skipAdvMat < 0.5)
+		if ((normalMap.x > -0.999 || normalMap.y > -0.999) && viewVector == viewVector && skipAdvMat < 0.5)
 			newNormal = clamp(normalize(normalMap * tbnMatrix), vec3(-1.0), vec3(1.0));
 		#endif
 		

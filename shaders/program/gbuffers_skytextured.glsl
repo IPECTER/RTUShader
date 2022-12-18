@@ -68,12 +68,12 @@ void main() {
 		float alphaMult = 1.0 - 0.6 * rainStrength;
 		albedo.a *= 1.0 - cloudAlpha / (alphaMult * alphaMult);
 	}
+	#endif
 	
 	#ifdef ROUND_SUN_MOON
 	if (renderStage == MC_RENDER_STAGE_SUN || renderStage == MC_RENDER_STAGE_MOON) {
 		albedo *= 0.0;
 	}
-	#endif
 	#endif
 	
 	#ifdef SKY_DESATURATION

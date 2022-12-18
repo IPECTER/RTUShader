@@ -74,8 +74,8 @@ void NormalFog(inout vec3 color, vec3 viewPos) {
 	#ifdef OVERWORLD
 	float fog = length(viewPos) * FOG_DENSITY / 256.0;
 	float clearDay = sunVisibility * (1.0 - rainStrength);
-	fog *= mix(1.0, (0.5 * rainStrength + 1.0) / (4.0 * clearDay + 1.0) * eBS, eBS);
-	fog = 1.0 - exp(-2.0 * pow(fog, 0.15 * clearDay * eBS + 1.25));
+	fog *= mix(1.0, (0.5 * rainStrength + 1.0) / (3.0 * clearDay + 1.0) * eBS, eBS);
+	fog = 1.0 - exp(-2.0 * pow(fog, 0.35 * clearDay * eBS + 1.25));
 	vec3 fogColor = GetFogColor(viewPos);
 
 	#if DISTANT_FADE == 1 || DISTANT_FADE == 3

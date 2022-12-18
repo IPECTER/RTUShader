@@ -259,7 +259,7 @@ void main() {
 						newCoord, dcdx, dcdy);
 
 		if (water < 0.5) {		
-			if (normalMap.x > -0.999 && normalMap.y > -0.999)
+			if ((normalMap.x > -0.999 || normalMap.y > -0.999) && viewVector == viewVector)
 				newNormal = clamp(normalize(normalMap * tbnMatrix), vec3(-1.0), vec3(1.0));
 		}
 		#endif

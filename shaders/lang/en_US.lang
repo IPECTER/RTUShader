@@ -70,9 +70,9 @@ screen.EXTRAS=Extras
 screen.ANIMATION=Animations
 
 #Settings
-option.ABOUT=§bRTUShader §fv§63.0§f
-option.ABOUT.comment=RTUShader(BSLedit) by 이팩터 / BSL by Capt Tatsu
-value.ABOUT.0=by 이팩터
+option.ABOUT=BSL v8.2
+option.ABOUT.comment=by Capt Tatsu. bitslablab.com
+value.ABOUT.0=by Capt Tatsu
 
 #Lighting
 option.shadowMapResolution=Shadowmap Quality
@@ -154,6 +154,9 @@ option.ALPHA_BLEND=Alpha Blending
 option.ALPHA_BLEND.comment=TBA. 
 value.ALPHA_BLEND.0=Gamma
 value.ALPHA_BLEND.1=Linear
+
+option.ENTITY_FLASH=Entity Flash
+option.ENTITY_FLASH.comment=Enables damaged entities and nearby creeper to flash.
 
 #Specular & Reflections
 option.REFLECTION=Reflections

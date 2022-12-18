@@ -1,38 +1,54 @@
 void GetMaterials(out float smoothness, out float metalness, out float f0, inout float emission,
                   inout float subsurface, out float porosity, out float ao, out vec3 normalMap,
                   vec2 newCoord, vec2 dcdx, vec2 dcdy) {
-    vec4 specularMap = texture2DGradARB(specular, newCoord, dcdx, dcdy);
-
     #if MATERIAL_FORMAT == 0
+    #ifdef PARALLAX
+    vec4 specularMap = texture2DGradARB(specular, newCoord, dcdx, dcdy);
+    #else
+    vec4 specularMap = texture2D(specular, texCoord);
+    #endif
+    
     smoothness = specularMap.r;
     
-    metalness = specularMap.g;
     f0 = 0.04;
+    metalness = specularMap.g;
 
     float emissionMat = specularMap.b * specularMap.b;
+
+    porosity = 0.5 - 0.5 * smoothness;
+    subsurface = specularMap.a > 0.0 ? 1.0 - specularMap.a : 0.0;
+
+    #ifdef PARALLAX
+	normalMap = texture2DGradARB(normals, newCoord, dcdx, dcdy).xyz * 2.0 - 1.0;
+    #else
+	normalMap = texture2D(normals, texCoord).xyz * 2.0 - 1.0;
+    #endif
     ao = 1.0;
 
-	normalMap = texture2DGradARB(normals, newCoord, dcdx, dcdy).xyz * 2.0 - 1.0;
     if (normalMap.x + normalMap.y < -1.999) normalMap = vec3(0.0, 0.0, 1.0);
     #endif
 
     #if MATERIAL_FORMAT == 1
+    vec4 specularMap = texture2DLod(specular, newCoord, 0);
     smoothness = specularMap.r;
 
     f0 = specularMap.g;
     metalness = f0 >= 0.9 ? 1.0 : 0.0;
+
+    float emissionMat = specularMap.a < 1.0 ? clamp(specularMap.a * 1.004 - 0.004, 0.0, 1.0) : 0.0;
+    emissionMat *= emissionMat;
+
     porosity = specularMap.b <= 0.251 ? specularMap.b * 3.984 : 0.0;
-    float sssMat = specularMap.b > 0.251 ? clamp(specularMap.b * 1.335 - 0.355, 0.0, 1.0) : 0.0;
-    #ifdef SSS
-    subsurface = mix(sssMat, 1.0, subsurface);
+    subsurface = specularMap.b > 0.251 ? clamp(specularMap.b * 1.335 - 0.355, 0.0, 1.0) : 0.0;
+
+    #ifdef PARALLAX
+	normalMap = vec3(texture2DGradARB(normals, newCoord, dcdx, dcdy).xy, 0.0) * 2.0 - 1.0;
+    ao = texture2DGradARB(normals, newCoord, dcdx, dcdy).z;
     #else
-    subsurface = sssMat;
+	normalMap = vec3(texture2D(normals, texCoord).xy, 0.0) * 2.0 - 1.0;
+    ao = texture2D(normals, texCoord).z;
     #endif
 
-    float emissionMat = specularMap.a < 1.0 ? specularMap.a * specularMap.a : 0.0;
-    ao = texture2DGradARB(normals, newCoord, dcdx, dcdy).z;
-
-	normalMap = vec3(texture2DGradARB(normals, newCoord, dcdx, dcdy).xy, 0.0) * 2.0 - 1.0;
     if (normalMap.x + normalMap.y > -1.999) {
         if (length(normalMap.xy) > 1.0) normalMap.xy = normalize(normalMap.xy);
         normalMap.z = sqrt(1.0 - dot(normalMap.xy, normalMap.xy));

@@ -25,7 +25,6 @@ float ph = 0.8 / min(360.0, viewHeight);
 float pw = ph / aspectRatio;
 
 float weight[6] = float[6](0.0556, 0.1667, 0.2777, 0.2777, 0.1667, 0.0556);
-// float weight[7] = float[7](0.0315, 0.1102, 0.2205, 0.2756, 0.2205, 0.1102, 0.0315);
 
 //Common Functions//
 vec3 BloomTile(float lod, vec2 coord, vec2 offset) {
