@@ -112,7 +112,7 @@ void NormalFog(inout vec3 color, vec3 viewPos) {
 	fog += 6.0 * pow(fogFactor * 1.5 / far, 4.0);
 	#endif
 	fog = 1.0 - exp(-fog);
-	vec3 fogColor = netherCol.rgb * 0.04;
+	vec3 fogColor = netherCol.rgb * 0.0425;
 	#endif
 
 	#ifdef END

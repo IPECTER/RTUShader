@@ -78,7 +78,7 @@ void main() {
 	
 	#ifdef MOTION_BLUR
 	float z = texture2D(depthtex1, texCoord.st).x;
-	float dither = Bayer64(gl_FragCoord.xy);
+	float dither = Bayer8(gl_FragCoord.xy);
 
 	#ifdef OUTLINE_OUTER
 	DepthOutline(z);

@@ -65,6 +65,14 @@ uniform int heldBlockLightValue;
 uniform int heldBlockLightValue2;
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+uniform mat4 gbufferPreviousModelView;
+uniform mat4 gbufferPreviousProjection;
+uniform vec3 previousCameraPosition;
+
+uniform sampler2D colortex9;
+#endif
+
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
 float sunVisibility  = clamp((dot( sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
@@ -107,7 +115,16 @@ float GetLuminance(vec3 color) {
 #include "/lib/surface/parallax.glsl"
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+#include "/lib/lighting/coloredBlocklight.glsl"
+#endif
+
 #ifdef NORMAL_SKIP
+#undef PARALLAX
+#undef SELF_SHADOW
+#endif
+
+#if MC_VERSION <= 10710
 #undef PARALLAX
 #undef SELF_SHADOW
 #endif
@@ -164,8 +181,12 @@ void main() {
 		
 		emission *= dot(albedo.rgb, albedo.rgb) * 0.333;
 
+		#ifndef ENTITY_FLASH
+		emission = 0.0;
+		#endif
+
 		vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), gl_FragCoord.z);
-		#ifdef TAA
+		#if defined TAA && !defined TAA_SELECTIVE
 		vec3 viewPos = ToNDC(vec3(TAAJitter(screenPos.xy, -0.5), screenPos.z));
 		#else
 		vec3 viewPos = ToNDC(screenPos);
@@ -187,7 +208,7 @@ void main() {
 							  tangent.y, binormal.y, normal.y,
 							  tangent.z, binormal.z, normal.z);
 
-		if (normalMap.x > -0.999 && normalMap.y > -0.999 && skipAdvMat < 0.5)
+		if ((normalMap.x > -0.999 || normalMap.y > -0.999) && viewVector == viewVector && skipAdvMat < 0.5)
 			newNormal = clamp(normalize(normalMap * tbnMatrix), vec3(-1.0), vec3(1.0));
 		#endif
 		
@@ -239,6 +260,10 @@ void main() {
 		}
 		#endif
 		#endif
+
+		#ifdef MULTICOLORED_BLOCKLIGHT
+		blocklightCol = ApplyMultiColoredBlocklight(blocklightCol, screenPos);
+		#endif
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, 1.0, NoL, vanillaDiffuse,
@@ -287,11 +312,23 @@ void main() {
     gl_FragData[0] = albedo;
 	gl_FragData[1] = vec4(0.0, 0.0, 1.0, 1.0);
 
-	#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
-	/* DRAWBUFFERS:0367 */
-	gl_FragData[1] = vec4(smoothness, skyOcclusion, 1.0, 1.0);
-	gl_FragData[2] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
-	gl_FragData[3] = vec4(fresnel3, 1.0);
+	#ifdef MULTICOLORED_BLOCKLIGHT
+		/* DRAWBUFFERS:038 */
+		gl_FragData[2] = vec4(0.0,0.0,0.0,1.0);
+		
+		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
+		/* DRAWBUFFERS:03867 */
+		gl_FragData[1] = vec4(smoothness, skyOcclusion, 1.0, 1.0);
+		gl_FragData[3] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
+		gl_FragData[4] = vec4(fresnel3, 1.0);
+		#endif
+	#else
+		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
+		/* DRAWBUFFERS:0367 */
+		gl_FragData[1] = vec4(smoothness, skyOcclusion, 1.0, 1.0);
+		gl_FragData[2] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
+		gl_FragData[3] = vec4(fresnel3, 1.0);
+		#endif
 	#endif
 }
 
@@ -407,7 +444,7 @@ void main() {
 
 	gl_Position.z *= 0.01;
 	
-	#ifdef TAA
+	#if defined TAA && !defined TAA_SELECTIVE
 	gl_Position.xy = TAAJitter(gl_Position.xy, gl_Position.w);
 	#endif
 }

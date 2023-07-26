@@ -33,7 +33,7 @@ float GetLinearDepth(float depth) {
 
 //Program//
 void main() {
-    float ao = AmbientOcclusion(Bayer64(gl_FragCoord.xy));
+    float ao = AmbientOcclusion(Bayer8(gl_FragCoord.xy));
     
     /* DRAWBUFFERS:4 */
     gl_FragData[0] = vec4(ao, 0.0, 0.0, 0.0);

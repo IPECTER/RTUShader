@@ -51,6 +51,14 @@ uniform int heldBlockLightValue;
 uniform int heldBlockLightValue2;
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+uniform mat4 gbufferPreviousModelView;
+uniform mat4 gbufferPreviousProjection;
+uniform vec3 previousCameraPosition;
+
+uniform sampler2D colortex9;
+#endif
+
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
 float sunVisibility  = clamp((dot( sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
@@ -89,6 +97,10 @@ float GetLinearDepth(float depth) {
 #include "/lib/util/jitter.glsl"
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+#include "/lib/lighting/coloredBlocklight.glsl"
+#endif
+
 //Program//
 void main() {
     vec4 albedo = texture2D(texture, texCoord) * color;
@@ -97,7 +109,7 @@ void main() {
 		vec2 lightmap = clamp(lmCoord, vec2(0.0), vec2(1.0));
 
 		vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), gl_FragCoord.z);
-		#ifdef TAA
+		#if defined TAA && !defined TAA_SELECTIVE
 		vec3 viewPos = ToNDC(vec3(TAAJitter(screenPos.xy, -0.5), screenPos.z));
 		#else
 		vec3 viewPos = ToNDC(screenPos);
@@ -128,6 +140,10 @@ void main() {
 		float NoE = clamp(dot(normal, eastVec), -1.0, 1.0);
 		float vanillaDiffuse = (0.25 * NoU + 0.75) + (0.667 - abs(NoE)) * (1.0 - abs(NoU)) * 0.15;
 			  vanillaDiffuse*= vanillaDiffuse;
+
+		#ifdef MULTICOLORED_BLOCKLIGHT
+		blocklightCol = ApplyMultiColoredBlocklight(blocklightCol, screenPos);
+		#endif
 		
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, 1.0, NoL, 1.0,
@@ -150,7 +166,7 @@ void main() {
 	float difference = clamp(linearBackZ - linearZ, 0.0, 1.0);
 	difference = difference * difference * (3.0 - 2.0 * difference);
 
-	float opaqueThreshold = fract(Bayer64(gl_FragCoord.xy) + frameTimeCounter * 8.0);
+	float opaqueThreshold = fract(Bayer8(gl_FragCoord.xy) + frameTimeCounter * 8.0);
 
 	if (albedo.a > 0.999) albedo.a *= float(difference > opaqueThreshold);
 	else albedo.a *= difference;
@@ -159,11 +175,33 @@ void main() {
     /* DRAWBUFFERS:0 */
     gl_FragData[0] = albedo;
 
-	#ifdef ADVANCED_MATERIALS
-	/* DRAWBUFFERS:0367 */
-	gl_FragData[1] = vec4(0.0, 0.0, 0.0, 1.0);
-	gl_FragData[2] = vec4(0.0, 0.0, 0.0, 1.0);
-	gl_FragData[3] = vec4(0.0, 0.0, 0.0, 1.0);
+	#ifdef MULTICOLORED_BLOCKLIGHT
+		/* DRAWBUFFERS:08 */
+		gl_FragData[1] = vec4(0.0,0.0,0.0,1.0);
+		
+		#if defined TAA_SELECTIVE && !defined ADVANCED_MATERIALS
+		/* DRAWBUFFERS:083 */
+		gl_FragData[2] = vec4(0.0, 0.0, 0.25, 1.0);
+		#endif
+
+		#ifdef ADVANCED_MATERIALS
+		/* DRAWBUFFERS:08367 */
+		gl_FragData[2] = vec4(0.0, 0.0, 0.25, 1.0);
+		gl_FragData[3] = vec4(0.0, 0.0, 0.0, 1.0);
+		gl_FragData[4] = vec4(0.0, 0.0, 0.0, 1.0);
+		#endif
+	#else
+		#if defined TAA_SELECTIVE && !defined ADVANCED_MATERIALS
+		/* DRAWBUFFERS:03 */
+		gl_FragData[1] = vec4(0.0, 0.0, 0.25, 1.0);
+		#endif
+
+		#ifdef ADVANCED_MATERIALS
+		/* DRAWBUFFERS:0367 */
+		gl_FragData[1] = vec4(0.0, 0.0, 0.25, 1.0);
+		gl_FragData[2] = vec4(0.0, 0.0, 0.0, 1.0);
+		gl_FragData[3] = vec4(0.0, 0.0, 0.0, 1.0);
+		#endif
 	#endif
 }
 
@@ -264,7 +302,7 @@ void main() {
 	gl_Position.z = GetLogarithmicDepth(gl_Position.z / (far - near)) * gl_Position.w;
 	#endif
 	
-	#ifdef TAA
+	#if defined TAA && !defined TAA_SELECTIVE
 	gl_Position.xy = TAAJitter(gl_Position.xy, gl_Position.w);
 	#endif
 }

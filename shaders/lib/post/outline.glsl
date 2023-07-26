@@ -15,7 +15,7 @@ void Outline(vec3 color, bool secondPass, out vec4 outerOutline, out vec4 innerO
 		vec2 offset = vec2(pw, ph) * outlineOffsets[i];
         float linSampleZSum = 0.0, linSampleZDiff = 0.0;
 
-        for (int j = 0; j < 2; j++) {        
+        for (int j = 0; j < 2; j++) {
             float sampleZ = texture2D(depthtex0, texCoord + offset).r;
             float linSampleZ = GetLinearDepth(sampleZ);
 

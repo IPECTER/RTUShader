@@ -17,6 +17,7 @@ varying vec3 sunVec, upVec, eastVec;
 //Uniforms//
 uniform int frameCounter;
 uniform int isEyeInWater;
+uniform int worldTime;
 
 uniform float blindFactor, darknessFactor, nightVision;
 uniform float far, near;
@@ -25,7 +26,6 @@ uniform float rainStrength;
 uniform float shadowFade, voidFade;
 uniform float timeAngle, timeBrightness;
 uniform float viewWidth, viewHeight, aspectRatio;
-uniform float worldTime;
 
 uniform ivec2 eyeBrightnessSmooth;
 
@@ -49,6 +49,11 @@ uniform sampler2D colortex5;
 uniform sampler2D colortex6;
 uniform sampler2D colortex7;
 uniform sampler2D noisetex;
+#endif
+
+#ifdef MULTICOLORED_BLOCKLIGHT
+uniform sampler2D colortex8;
+uniform sampler2D colortex9;
 #endif
 
 //Optifine Constants//
@@ -172,7 +177,7 @@ void main() {
     vec4 color = texture2D(colortex0, texCoord);
 	float z = texture2D(depthtex0, texCoord).r;
 
-	float dither = Bayer64(gl_FragCoord.xy);
+	float dither = Bayer8(gl_FragCoord.xy);
 
 	#if ALPHA_BLEND == 0
 	if (z == 1.0) color.rgb = max(color.rgb - dither / vec3(64.0), vec3(0.0));
@@ -258,7 +263,7 @@ void main() {
 		Fog(color.rgb, viewPos.xyz);
 	} else {
 		#ifdef NETHER
-		color.rgb = netherCol.rgb * 0.04;
+		color.rgb = netherCol.rgb * 0.0425;
 		#endif
 		#if defined END && !defined LIGHT_SHAFT
 		float VoL = dot(normalize(viewPos.xyz), lightVec);
@@ -292,11 +297,19 @@ void main() {
 	color.rgb = sqrt(max(color.rgb, vec3(0.0)));
 	#endif
     
-    /* DRAWBUFFERS:0 */
+    /*DRAWBUFFERS:0 */
     gl_FragData[0] = color;
-	#ifndef REFLECTION_PREVIOUS
+
+	#if !defined REFLECTION_PREVIOUS && REFRACTION == 0
 	/*DRAWBUFFERS:05*/
 	gl_FragData[1] = vec4(reflectionColor, float(z < 1.0));
+	#elif defined REFLECTION_PREVIOUS && REFRACTION > 0
+	/*DRAWBUFFERS:06*/
+	gl_FragData[1] = vec4(0.0, 0.0, 0.0, 1.0);
+	#elif !defined REFLECTION_PREVIOUS && REFRACTION > 0
+	/*DRAWBUFFERS:056*/
+	gl_FragData[1] = vec4(reflectionColor, float(z < 1.0));
+	gl_FragData[2] = vec4(0.0, 0.0, 0.0, 1.0);
 	#endif
 }
 

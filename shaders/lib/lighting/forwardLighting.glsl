@@ -22,6 +22,7 @@ void GetLighting(inout vec3 albedo, out vec3 shadow, vec3 viewPos, vec3 worldPos
         shadow = GetShadow(worldPos, NoL, basicSubsurface, lightmap.y);
     }
     shadow *= parallaxShadow;
+    shadow = max(shadow, vec3(0.0));
     NoL = clamp(NoL * 1.01 - 0.01, 0.0, 1.0);
     
     float scattering = 0.0;
@@ -32,7 +33,7 @@ void GetLighting(inout vec3 albedo, out vec3 shadow, vec3 viewPos, vec3 worldPos
         NoL = mix(NoL, 1.0, scattering);
     }
     
-    vec3 fullShadow = shadow * NoL;
+    vec3 fullShadow = max(shadow * NoL, vec3(0.0));
 
     #ifdef ADVANCED_MATERIALS
     if (subsurface > 0.0){
@@ -41,7 +42,9 @@ void GetLighting(inout vec3 albedo, out vec3 shadow, vec3 viewPos, vec3 worldPos
         float VoL = clamp(dot(normalize(viewPos.xyz), lightVec) * 0.5 + 0.5, 0.0, 1.0);
         float scattering = pow(VoL, 16.0) * (1.0 - rainStrength) * shadowFade;
 
-        vec3 subsurfaceColor = mix(normalize(albedo + 0.00001) * 1.4, vec3(4.0), scattering);
+        vec3 subsurfaceColor = normalize(albedo + 0.00001) * 1.2;
+        subsurfaceColor = mix(subsurfaceColor, vec3(1.0), pow(subsurfaceShadow, vec3(4.0)));
+        subsurfaceColor = mix(subsurfaceColor, vec3(4.0), scattering) * sqrt(subsurface);
 
         fullShadow = mix(subsurfaceColor * subsurfaceShadow, vec3(1.0), fullShadow);
     }
@@ -92,7 +95,7 @@ void GetLighting(inout vec3 albedo, out vec3 shadow, vec3 viewPos, vec3 worldPos
     #endif
 
     //albedo = vec3(0.5);
-    albedo *= sceneLighting + blockLighting + emissiveLighting + nightVisionLighting + minLighting;
+    albedo *= max(sceneLighting + blockLighting + emissiveLighting + nightVisionLighting + minLighting, vec3(0.0));
     albedo *= vanillaDiffuse * smoothLighting * smoothLighting;
 
     #ifdef DESATURATION

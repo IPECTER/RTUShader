@@ -22,18 +22,23 @@ uniform float blindFactor, darknessFactor;
 uniform float rainStrength;
 uniform float shadowFade, voidFade;
 uniform float timeAngle, timeBrightness;
+uniform float viewWidth, viewHeight;
 
 uniform ivec2 eyeBrightnessSmooth;
 
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 
-//Optifine Constants//
-const bool colortex1MipmapEnabled = true;
-
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
 float sunVisibility = clamp(dot(sunVec, upVec) + 0.05, 0.0, 0.1) * 10.0;
+
+vec2 vlOffsets[4] = vec2[4](
+	vec2( 1.5,  0.5),
+	vec2(-0.5,  1.5),
+	vec2(-1.5, -0.5),
+	vec2( 0.5, -1.5)
+);
 
 //Includes//
 #include "/lib/color/dimensionColor.glsl"
@@ -42,8 +47,11 @@ float sunVisibility = clamp(dot(sunVec, upVec) + 0.05, 0.0, 0.1) * 10.0;
 void main() {
     vec4 color = texture2D(colortex0, texCoord.xy);
 	
-	vec3 vl = texture2DLod(colortex1, texCoord.xy, 1.5).rgb;
-	vl *= vl;
+	vec3 vl = texture2D(colortex1, texCoord.xy + vlOffsets[0] / vec2(viewWidth, viewHeight)).rgb;
+		 vl+= texture2D(colortex1, texCoord.xy + vlOffsets[1] / vec2(viewWidth, viewHeight)).rgb;
+		 vl+= texture2D(colortex1, texCoord.xy + vlOffsets[2] / vec2(viewWidth, viewHeight)).rgb;
+		 vl+= texture2D(colortex1, texCoord.xy + vlOffsets[3] / vec2(viewWidth, viewHeight)).rgb;
+		 vl*= vl * 0.0625;
 
 	#ifdef OVERWORLD
     vl *= lightCol * 0.25;

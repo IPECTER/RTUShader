@@ -16,15 +16,18 @@ varying vec2 texCoord;
 uniform int frameCounter;
 uniform float viewWidth, viewHeight, aspectRatio;
 
-uniform sampler2D colortex1;
-
 uniform vec3 cameraPosition, previousCameraPosition;
 
 uniform mat4 gbufferPreviousProjection, gbufferProjectionInverse;
 uniform mat4 gbufferPreviousModelView, gbufferModelViewInverse;
 
+uniform sampler2D colortex1;
 uniform sampler2D colortex2;
 uniform sampler2D depthtex1;
+
+#ifdef TAA_SELECTIVE
+uniform sampler2D colortex3;
+#endif
 
 //Optifine Constants//
 #ifdef LIGHT_SHAFT

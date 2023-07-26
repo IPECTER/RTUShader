@@ -41,7 +41,7 @@ vec3 GetLightShafts(float pixeldepth0, float pixeldepth1, vec3 color, float dith
 	vec3 vl = vec3(0.0);
 
 	#ifdef TAA
-	dither = fract(dither + frameCounter * 1.618);
+	dither = fract(dither + frameCounter * 0.618);
 	#endif
 	
 	vec3 screenPos = vec3(texCoord, pixeldepth0);
@@ -102,6 +102,9 @@ vec3 GetLightShafts(float pixeldepth0, float pixeldepth1, vec3 color, float dith
 					if (shadow1 > 0.0) {
 						shadowCol = texture2D(shadowcolor0, shadowposition.xy).rgb;
 						shadowCol *= shadowCol * shadow1;
+						#ifdef WATER_CAUSTICS
+						shadowCol *= 16.0 - 15.0 * (1.0 - (1.0 - shadow0) * (1.0 - shadow0));
+						#endif
 					}
 				}
 				#endif
@@ -109,10 +112,16 @@ vec3 GetLightShafts(float pixeldepth0, float pixeldepth1, vec3 color, float dith
 				shadow0 *= shadow0;
 				shadowCol *= shadowCol;
 				
-				vec3 shadow = clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
+				vec3 shadow = clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(16.0));
 
 				if (depth0 < minDist) shadow *= color;
-				else if (isEyeInWater == 1.0) shadow *= watercol * 0.01 * (1.0 + eBS);
+				else if (isEyeInWater == 1.0) {
+					#ifdef WATER_SHADOW_COLOR
+					shadow *= 0.125 * (1.0 + eBS);
+					#else
+					shadow *= watercol * 0.01 * (1.0 + eBS);
+					#endif
+				}
 
 				#ifdef END
 				vec3 npos = worldposition.xyz + cameraPosition.xyz + vec3(frametime * 4.0, 0, 0);

@@ -61,13 +61,16 @@ vec3 SampleBasicShadow(vec3 shadowPos, float subsurface) {
     if (shadow0 < 1.0) {
         shadowCol = texture2D(shadowcolor0, shadowPos.st).rgb *
                     shadow2D(shadowtex1, vec3(shadowPos.st, shadowPos.z)).x;
+        #ifdef WATER_CAUSTICS
+        shadowCol *= 4.0;
+        #endif
     }
     #endif
 
     shadow0 *= mix(shadow0, 1.0, subsurface);
     shadowCol *= shadowCol;
 
-    return clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
+    return clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(16.0));
 }
 
 vec3 SampleFilteredShadow(vec3 shadowPos, float offset, float biasStep, float subsurface) {
@@ -84,8 +87,12 @@ vec3 SampleFilteredShadow(vec3 shadowPos, float offset, float biasStep, float su
     if (shadow0 < 0.999) {
         for (int i = 0; i < 9; i++) {
             vec2 shadowOffset = shadowOffsets[i] * offset;
-            shadowCol += texture2D(shadowcolor0, shadowPos.st + shadowOffset).rgb *
+            vec3 shadowColSample = texture2D(shadowcolor0, shadowPos.st + shadowOffset).rgb *
                          shadow2D(shadowtex1, vec3(shadowPos.st + shadowOffset, shadowPos.z)).x;
+            #ifdef WATER_CAUSTICS
+            shadowColSample *= 4.0;
+            #endif
+            shadowCol += shadowColSample;
         }
         shadowCol /= 9.0;
     }
@@ -94,7 +101,7 @@ vec3 SampleFilteredShadow(vec3 shadowPos, float offset, float biasStep, float su
     shadow0 *= mix(shadow0, 1.0, subsurface);
     shadowCol *= shadowCol;
 
-    return clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
+    return clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(16.0));
 }
 
 vec3 GetShadow(vec3 worldPos, float NoL, float subsurface, float skylight) {
@@ -181,13 +188,16 @@ vec3 GetSubsurfaceShadow(vec3 worldPos, float subsurface, float skylight) {
         if (shadow0 < 1.0) {
             shadowCol = texture2D(shadowcolor0, samplePos.st).rgb *
                         shadow2D(shadowtex1, samplePos).x;
+            #ifdef WATER_CAUSTICS
+            shadowCol *= 4.0;
+            #endif
         }
         #endif
 
         subsurfaceShadow += clamp(shadowCol * (1.0 - shadow0) + shadow0, vec3(0.0), vec3(1.0));
     }
     subsurfaceShadow /= 12.0;
-    subsurfaceShadow *= subsurfaceShadow * sqrt(subsurface);
+    subsurfaceShadow *= subsurfaceShadow;
 
     return subsurfaceShadow;
 }

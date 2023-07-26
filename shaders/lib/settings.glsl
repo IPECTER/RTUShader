@@ -32,16 +32,24 @@ Please don't edit anything from Undefine section and onwards.
   const float shadowDistance = 256.0; //[128.0 256.0 512.0 1024.0]
   #define SHADOW_COLOR
   #define SHADOW_FILTER
-  #define SHADOW_ENTITY
-  #define SHADOW_PIXEL 0 //[0 16 32 64 128]
   const float sunPathRotation = -40.0; //[-85.0 -80.0 -75.0 -70.0 -65.0 -60.0 -55.0 -50.0 -45.0 -40.0 -35.0 -30.0 -25.0 -20.0 -15.0 -10.0 -5.0 0.0 5.0 10.0 15.0 20.0 25.0 30.0 35.0 40.0 45.0 50.0 55.0 60.0 65.0 70.0 75.0 80.0 85.0]
   const float shadowMapBias = 1.0 - 25.6 / shadowDistance;
+
+  #define SHADOW_ENTITY
+  #define SHADOW_BLOCK_ENTITY
+  #define SHADOW_VEGETATION
+  #define SHADOW_PIXEL 0 //[0 16 32 64 128]
+
   #define AO
   #define AO_STRENGTH 2.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define DESATURATION
   #define DESATURATION_FACTOR 1.0 //[2.0 1.5 1.0 0.5 0.0]
+  #define MULTICOLORED_BLOCKLIGHT
   #define DYNAMIC_HANDLIGHT
 //#define WHITE_WORLD
+
+  #define MCBL_ANTI_BLEED
+//#define MCBL_LEGACY_COLOR
 
 //Material//
 //#define ADVANCED_MATERIALS
@@ -74,6 +82,7 @@ Please don't edit anything from Undefine section and onwards.
   #define SSS
   #define BASIC_SSS
   #define EMISSIVE 2 //[0 1 2]
+  #define REFRACTION 0 //[0 1 2]
   #define ALBEDO_BALANCING
   #define ALPHA_BLEND 0 //[0 1]
   #define ENTITY_FLASH
@@ -105,23 +114,31 @@ Please don't edit anything from Undefine section and onwards.
   #define SKY_GROUND 2 //[0 1 2]
   #define SKYBOX_BRIGHTNESS 2.75 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 2.25 2.50 2.75 3.00 3.25 3.50 3.75 4.00]
 
-  #define CLOUD_THICKNESS 4 //[1 2 4 8 16]
+  #define CLOUD_BASE 0 //[0 1]
+  #define CLOUD_DENSITY 4 //[1 2 4 6 8]
   #define CLOUD_AMOUNT 10.0 //[12.0 11.0 10.0 9.0 8.0]
   #define CLOUD_HEIGHT 10.0 //[5.0 7.5 10.0 12.5 15.0]
+  #define CLOUD_THICKNESS 5 //[2 4 5 7 10]
+  #define CLOUD_DETAIL 1.0 //[0.3 0.7 1.0 1.3 1.7]
   #define CLOUD_SPEED 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 2.50 3.00 3.50 4.00]
   #define CLOUD_OPACITY 1.0 //[0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
-  #define CLOUD_BRIGHTNESS 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 2.25 2.50 2.75 3.00 3.25 3.50 3.75 4.00]
+  #define CLOUD_BRIGHTNESS 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
 
 //Water//
   #define WATER_MODE 0 //[0 1 2 3]
   #define WATER_ALPHA_MODE 0 //[0 1]
+  #define WATER_SHADOW_MODE 0 //[0 1 2 3]
   #define WATER_NORMALS 2 //[0 1 2]
   #define WATER_PARALLAX
+//#define WATER_SHADOW_COLOR
+//#define WATER_CAUSTICS
   #define WATER_BUMP 1.25 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define WATER_DETAIL 0.50 //[0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50]
   #define WATER_SHARPNESS 0.2 //[0.8 0.5 0.2]
   #define WATER_SPEED 1.75 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 2.50 3.00 3.50 4.00]
+  #define WATER_FOG 0 //[0 1]
   #define WATER_FOG_DENSITY 0.25 //[0.25 0.50 0.75 1.00 1.50 2.00 2.50 3.00 3.50 4.00]
+  #define WATER_CAUSTICS_STRENGTH 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define WATER_PIXEL 0 //[0 16 32 64 128]
 
 //Post Effects//
@@ -132,7 +149,7 @@ Please don't edit anything from Undefine section and onwards.
   #define BLOOM
   #define BLOOM_STRENGTH 0.25 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 2.25 2.50 2.75 3.00 3.25 3.50 3.75 4.00]
   #define BLOOM_CONTRAST 4 //[-4 -3 -2 -1 0 1 2 3 4]
-  #define BLOOM_RADIUS 7 //[1 2 3 4 5 6 7]
+  #define BLOOM_RADIUS 6 //[1 2 3 4 5 6 7]
   #define LENS_FLARE
   #define LENS_FLARE_STRENGTH 1.75 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define VIGNETTE
@@ -144,6 +161,11 @@ Please don't edit anything from Undefine section and onwards.
 //Anti-aliasing
   #define FXAA
 //#define TAA
+
+  #define FXAA_SUBPIXEL 0.75 //[0.00 0.25 0.50 0.75 1.00]
+  #define FXAA_EDGE_SENSITIVITY 1 //[0 1 2]
+
+//#define TAA_SELECTIVE
 
 //Color//
   #define LIGHT_MR 255 //[0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 255]
@@ -243,7 +265,7 @@ Please don't edit anything from Undefine section and onwards.
   #define WEATHER_VI 1.20 //[0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00 2.05 2.10 2.15 2.20 2.25 2.30 2.35 2.40 2.45 2.50 2.55 2.60 2.65 2.70 2.75 2.80 2.85 2.90 2.95 3.00 3.05 3.10 3.15 3.20 3.25 3.30 3.35 3.40 3.45 3.50 3.55 3.60 3.65 3.70 3.75 3.80 3.85 3.90 3.95 4.00]
 
   #define AURORA_LR 80 //[0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 255]
-  #define AURORA_LG 208 //[0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 255]
+  #define AURORA_LG 255 //[0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 255]
   #define AURORA_LB 180 //[0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 255]
   #define AURORA_LI 1.00 //[0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00 2.05 2.10 2.15 2.20 2.25 2.30 2.35 2.40 2.45 2.50 2.55 2.60 2.65 2.70 2.75 2.80 2.85 2.90 2.95 3.00 3.05 3.10 3.15 3.20 3.25 3.30 3.35 3.40 3.45 3.50 3.55 3.60 3.65 3.70 3.75 3.80 3.85 3.90 3.95 4.00]
 
@@ -396,6 +418,17 @@ Please don't edit anything from Undefine section and onwards.
   #define NORMAL_SKIP
   #endif
 
-//Shadow Entity Placeholder//
+//Multi-colored Unavailable on 1.16.5 and below//
+  #if MC_VERSION < 11605
+  // #undef MULTICOLORED_BLOCKLIGHT //not working properly for some reason
+  #endif
+
+//Show In Shader Options//
   #ifdef SHADOW_ENTITY
+  #endif
+  
+  #ifdef SHADOW_BLOCK_ENTITY
+  #endif
+
+  #ifdef TAA_SELECTIVE
   #endif

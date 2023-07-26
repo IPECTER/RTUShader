@@ -78,7 +78,7 @@ void main() {
 	gl_Position = ftransform();
 	#endif
 	
-	#ifdef TAA
+	#if defined TAA && !defined TAA_SELECTIVE
 	gl_Position.xy = TAAJitter(gl_Position.xy, gl_Position.w);
 	#endif
 }

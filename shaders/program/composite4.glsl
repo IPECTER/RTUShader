@@ -23,6 +23,7 @@ const bool colortex0MipmapEnabled = true;
 //Common Variables//
 float ph = 0.8 / min(360.0, viewHeight);
 float pw = ph / aspectRatio;
+vec2 view = vec2(1.0 / viewWidth, 1.0 / viewHeight);
 
 float weight[6] = float[6](0.0556, 0.1667, 0.2777, 0.2777, 0.1667, 0.0556);
 
@@ -31,9 +32,9 @@ vec3 BloomTile(float lod, vec2 coord, vec2 offset) {
 	vec3 bloom = vec3(0.0), temp = vec3(0.0);
 	float scale = exp2(lod);
 	coord = (coord - offset) * scale;
-	float padding = 0.5 + 0.005 * scale;
+	vec2 padding = vec2(0.5) + 2.0 * view * scale;
 
-	if (abs(coord.x - 0.5) < padding && abs(coord.y - 0.5) < padding) {
+	if (abs(coord.x - 0.5) < padding.x && abs(coord.y - 0.5) < padding.y) {
 		for(int i = 0; i < 6; i++) {
 			for(int j = 0; j < 6; j++) {
 				float wg = weight[i] * weight[j];
@@ -53,14 +54,14 @@ vec3 BloomTile(float lod, vec2 coord, vec2 offset) {
 void main() {
 	vec2 bloomCoord = texCoord * viewHeight * 0.8 / min(360.0, viewHeight);
 	vec3 blur =  BloomTile(1.0, bloomCoord, vec2(0.0      , 0.0   ));
-	     blur += BloomTile(2.0, bloomCoord, vec2(0.51     , 0.0   ));
-	     blur += BloomTile(3.0, bloomCoord, vec2(0.51     , 0.26  ));
-	     blur += BloomTile(4.0, bloomCoord, vec2(0.645    , 0.26  ));
-	     blur += BloomTile(5.0, bloomCoord, vec2(0.7175   , 0.26  ));
-	     blur += BloomTile(6.0, bloomCoord, vec2(0.645    , 0.3325));
-	     blur += BloomTile(7.0, bloomCoord, vec2(0.670625 , 0.3325));
+	     blur += BloomTile(2.0, bloomCoord, vec2(0.50     , 0.0   ) + vec2( 4.0, 0.0) * view);
+	     blur += BloomTile(3.0, bloomCoord, vec2(0.50     , 0.25  ) + vec2( 4.0, 4.0) * view);
+	     blur += BloomTile(4.0, bloomCoord, vec2(0.625    , 0.25  ) + vec2( 8.0, 4.0) * view);
+	     blur += BloomTile(5.0, bloomCoord, vec2(0.6875   , 0.25  ) + vec2(12.0, 4.0) * view);
+	     blur += BloomTile(6.0, bloomCoord, vec2(0.625    , 0.3125) + vec2( 8.0, 8.0) * view);
+	     blur += BloomTile(7.0, bloomCoord, vec2(0.640625 , 0.3125) + vec2(12.0, 8.0) * view);
 		
-		 blur = clamp(blur + (Bayer64(gl_FragCoord.xy) - 0.5) / 384.0, vec3(0.0), vec3(1.0));
+		 blur = clamp(blur + (Bayer8(gl_FragCoord.xy) - 0.5) / 384.0, vec3(0.0), vec3(1.0));
 
     /* DRAWBUFFERS:1 */
 	gl_FragData[0] = vec4(blur, 1.0);

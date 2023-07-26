@@ -73,10 +73,9 @@ void main() {
 	#endif
 	vec3 worldPos = ToWorld(viewPos);
 
-	float worldDistance = length(worldPos) / 256.0;
-	float distantFade = 1.0 - smoothstep(0.6, 1.1, worldDistance);
-	
-	// albedo.rgb *= distantFade;
+	float worldDistance = length(worldPos.xz) / 256.0;
+	float distantFade = 1.0 - smoothstep(0.5, 1.0, worldDistance);
+
 	albedo.a *= color.a * distantFade;
 
 	#if ALPHA_BLEND == 0

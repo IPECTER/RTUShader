@@ -13,7 +13,7 @@ https://bitslablab.com
 varying vec2 texCoord;
 
 //Uniforms//
-uniform float viewWidth, viewHeight, aspectRatio;
+uniform float viewWidth, viewHeight, aspectRatio, frameTimeCounter;
 
 uniform sampler2D colortex1;
 

@@ -115,7 +115,7 @@ void main() {
 	if (moonVisibility > 0.0) DrawStars(albedo.rgb, viewPos.xyz);
 	#endif
 
-	float dither = Bayer64(gl_FragCoord.xy);
+	float dither = Bayer8(gl_FragCoord.xy);
 
 	#ifdef AURORA
 	albedo.rgb += DrawAurora(viewPos.xyz, dither, 24);

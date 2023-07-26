@@ -18,11 +18,11 @@ float AmbientOcclusion(float dither) {
 
 	float currentStep = 0.2 * dither + 0.2;
 
-	float radius = 0.35;
+	float radius = 0.5;
 	float fovScale = gbufferProjection[1][1] / 1.37;
-	float distScale = max((far - near) * depth + near, 5.0);
+	float distScale = max((far - near) * depth + near, 7.0);
 	vec2 scale = radius * vec2(1.0 / aspectRatio, 1.0) * fovScale / distScale;
-	float mult = (0.5 / radius) * (far - near) * (hand > 0.5 ? 1024.0 : 1.0);
+	float mult = (0.7 / radius) * (far - near) * (hand > 0.5 ? 1024.0 : 1.0);
 
 	for(int i = 0; i < 4; i++) {
 		vec2 offset = OffsetDist(currentStep) * scale;

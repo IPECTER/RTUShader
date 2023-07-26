@@ -72,6 +72,14 @@ uniform int heldBlockLightValue;
 uniform int heldBlockLightValue2;
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+uniform mat4 gbufferPreviousModelView;
+uniform mat4 gbufferPreviousProjection;
+uniform vec3 previousCameraPosition;
+
+uniform sampler2D colortex9;
+#endif
+
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
 float sunVisibility  = clamp((dot( sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
@@ -119,11 +127,16 @@ float GetLuminance(vec3 color) {
 #endif
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+#include "/lib/lighting/coloredBlocklight.glsl"
+#endif
+
 //Program//
 void main() {
     vec4 albedo = texture2D(texture, texCoord) * vec4(color.rgb, 1.0);
 	vec3 newNormal = normal;
 	float smoothness = 0.0;
+	vec3 lightAlbedo = vec3(0.0);
 
 	#ifdef ADVANCED_MATERIALS
 	vec2 newCoord = vTexCoord.st * vTexCoordAM.pq + vTexCoordAM.st;
@@ -207,6 +220,18 @@ void main() {
 		#else
 		#endif
 
+		#ifdef MULTICOLORED_BLOCKLIGHT
+		lightAlbedo = albedo.rgb + 0.00001;
+		if (lava > 0.5) {
+			#ifndef MCBL_LEGACY_COLOR
+			lightAlbedo = pow(lightAlbedo, vec3(0.25));
+			#else
+			lightAlbedo = sqrt(lightAlbedo) * 0.98 + 0.02;
+			#endif
+		}
+		lightAlbedo = sqrt(normalize(lightAlbedo) * emission);
+		#endif
+
 		#ifdef WHITE_WORLD
 		albedo.rgb = vec3(0.35);
 		#endif
@@ -263,6 +288,10 @@ void main() {
 		lightmap.x = DirectionalLightmap(lightmap.x, lmCoord.x, outNormal, lightmapTBN);
 		lightmap.y = DirectionalLightmap(lightmap.y, lmCoord.y, outNormal, lightmapTBN);
 		#endif
+		#endif
+
+		#ifdef MULTICOLORED_BLOCKLIGHT
+		blocklightCol = ApplyMultiColoredBlocklight(blocklightCol, screenPos);
 		#endif
 		
 		vec3 shadow = vec3(0.0);
@@ -349,11 +378,23 @@ void main() {
     /* DRAWBUFFERS:0 */
     gl_FragData[0] = albedo;
 
-	#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
-	/* DRAWBUFFERS:0367 */
-	gl_FragData[1] = vec4(smoothness, skyOcclusion, 0.0, 1.0);
-	gl_FragData[2] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
-	gl_FragData[3] = vec4(fresnel3, 1.0);
+	#ifdef MULTICOLORED_BLOCKLIGHT
+		/* DRAWBUFFERS:08 */
+		gl_FragData[1] = vec4(lightAlbedo, 1.0);
+
+		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
+		/* DRAWBUFFERS:08367 */
+		gl_FragData[2] = vec4(smoothness, skyOcclusion, 0.0, 1.0);
+		gl_FragData[3] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
+		gl_FragData[4] = vec4(fresnel3, 1.0);
+		#endif
+	#else
+		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
+		/* DRAWBUFFERS:0367 */
+		gl_FragData[1] = vec4(smoothness, skyOcclusion, 0.0, 1.0);
+		gl_FragData[2] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
+		gl_FragData[3] = vec4(fresnel3, 1.0);
+		#endif
 	#endif
 }
 

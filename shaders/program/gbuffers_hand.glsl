@@ -65,6 +65,14 @@ uniform int heldBlockLightValue;
 uniform int heldBlockLightValue2;
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+uniform mat4 gbufferPreviousModelView;
+uniform mat4 gbufferPreviousProjection;
+uniform vec3 previousCameraPosition;
+
+uniform sampler2D colortex9;
+#endif
+
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
 float sunVisibility  = clamp((dot( sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
@@ -111,6 +119,10 @@ float GetHandItem(int id) {
 #include "/lib/surface/parallax.glsl"
 #endif
 
+#ifdef MULTICOLORED_BLOCKLIGHT
+#include "/lib/lighting/coloredBlocklight.glsl"
+#endif
+
 #ifdef NORMAL_SKIP
 #undef PARALLAX
 #undef SELF_SHADOW
@@ -121,6 +133,7 @@ void main() {
     vec4 albedo = texture2D(texture, texCoord) * color;
 	vec3 newNormal = normal;
 	float smoothness = 0.0;
+	vec3 lightAlbedo = vec3(0.0);
 
 	#ifdef ADVANCED_MATERIALS
 	vec2 newCoord = vTexCoord.st * vTexCoordAM.pq + vTexCoordAM.st;
@@ -157,7 +170,7 @@ void main() {
 		emission *= dot(albedo.rgb, albedo.rgb) * 0.333;
 
 		vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), gl_FragCoord.z + 0.38);
-		#ifdef TAA
+		#if defined TAA && !defined TAA_SELECTIVE
 		vec3 viewPos = ToNDC(vec3(TAAJitter(screenPos.xy, -0.5), screenPos.z));
 		#else
 		vec3 viewPos = ToNDC(screenPos);
@@ -205,6 +218,11 @@ void main() {
 			albedo.rgb /= 0.7 * albedo.rgb + 0.7;
 		}
 		#endif
+		
+		#ifdef MULTICOLORED_BLOCKLIGHT
+		lightAlbedo = albedo.rgb + 0.00001;
+		lightAlbedo = sqrt(normalize(lightAlbedo) * emission * emissive);
+		#endif
 
 		#ifdef WHITE_WORLD
 		albedo.rgb = vec3(0.35);
@@ -239,6 +257,10 @@ void main() {
 			parallaxShadow = GetParallaxShadow(surfaceDepth, 0.0, newCoord, lightVec, tbnMatrix);
 		}
 		#endif
+		#endif
+
+		#ifdef MULTICOLORED_BLOCKLIGHT
+		blocklightCol = ApplyMultiColoredBlocklight(blocklightCol, screenPos);
 		#endif
 		
 		vec3 shadow = vec3(0.0);
@@ -286,12 +308,33 @@ void main() {
 
     /* DRAWBUFFERS:0 */
     gl_FragData[0] = albedo;
+	#ifdef MULTICOLORED_BLOCKLIGHT
+		/* DRAWBUFFERS:08 */
+		gl_FragData[1] = vec4(lightAlbedo,1.0);
+		
+		#if defined TAA_SELECTIVE && !(defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR)
+		/* DRAWBUFFERS:083 */
+		gl_FragData[2] = vec4(0.0, 0.0, 0.25, 1.0);
+		#endif
 
-	#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
-	/* DRAWBUFFERS:0367 */
-	gl_FragData[1] = vec4(smoothness, skyOcclusion, 0.0, 1.0);
-	gl_FragData[2] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
-	gl_FragData[3] = vec4(fresnel3, 1.0);
+		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
+		/* DRAWBUFFERS:08367 */
+		gl_FragData[2] = vec4(smoothness, skyOcclusion, 0.25, 1.0);
+		gl_FragData[3] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
+		gl_FragData[4] = vec4(fresnel3, 1.0);
+		#endif
+	#else
+		#if defined TAA_SELECTIVE && !(defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR)
+		/* DRAWBUFFERS:03 */
+		gl_FragData[1] = vec4(0.0, 0.0, 0.25, 1.0);
+		#endif
+
+		#if defined ADVANCED_MATERIALS && defined REFLECTION_SPECULAR
+		/* DRAWBUFFERS:0367 */
+		gl_FragData[1] = vec4(smoothness, skyOcclusion, 0.25, 1.0);
+		gl_FragData[2] = vec4(EncodeNormal(newNormal), float(gl_FragCoord.z < 1.0), 1.0);
+		gl_FragData[3] = vec4(fresnel3, 1.0);
+		#endif
 	#endif
 }
 
@@ -411,7 +454,7 @@ void main() {
 	gl_Position = ftransform();
 	#endif
 	
-	#ifdef TAA
+	#if defined TAA && !defined TAA_SELECTIVE
 	gl_Position.xy = TAAJitter(gl_Position.xy, gl_Position.w);
 	#endif
 	
