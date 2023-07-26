@@ -1,7 +1,7 @@
 float fovmult = gbufferProjection[1][1] / 1.37373871;
 
 float BaseLens(vec2 lightPos, float size, float dist, float hardness) {
-	vec2 lensCoord = (texCoord + (lightPos * dist - 0.5)) * vec2(aspectRatio,1.0);
+	vec2 lensCoord = (texCoord + (lightPos * dist - 0.5)) * vec2(aspectRatio, 1.0);
 	float lens = clamp(1.0 - length(lensCoord) / (size * fovmult), 0.0, 1.0 / hardness) * hardness;
 	lens *= lens; lens *= lens;
 	return lens;

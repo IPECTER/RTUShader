@@ -18,12 +18,16 @@ void GetLighting(inout vec3 albedo, out vec3 shadow, vec3 viewPos, vec3 worldPos
     #endif
 
     #if defined OVERWORLD || defined END
+    #ifdef SHADOW
     if (NoL > 0.0 || basicSubsurface > 0.0) {
         shadow = GetShadow(worldPos, NoL, basicSubsurface, lightmap.y);
     }
     shadow *= parallaxShadow;
     shadow = max(shadow, vec3(0.0));
     NoL = clamp(NoL * 1.01 - 0.01, 0.0, 1.0);
+    #else
+    shadow = GetShadow(worldPos, NoL, basicSubsurface, lightmap.y);
+    #endif
     
     float scattering = 0.0;
     if (basicSubsurface > 0.0){
@@ -33,7 +37,18 @@ void GetLighting(inout vec3 albedo, out vec3 shadow, vec3 viewPos, vec3 worldPos
         NoL = mix(NoL, 1.0, scattering);
     }
     
+    #ifdef SHADOW
     vec3 fullShadow = max(shadow * NoL, vec3(0.0));
+    #else
+    vec3 fullShadow = vec3(shadow);
+    #ifdef OVERWORLD
+    float timeBrightnessAbs = abs(sin(timeAngle * 6.28318530718));
+    fullShadow *= 0.25 + 0.5 * (1.0 - (1.0 - timeBrightnessAbs) * (1.0 - timeBrightnessAbs));
+    fullShadow *= mix(pow(vanillaDiffuse, 1.0 + timeBrightnessAbs), 1.0, basicSubsurface * 0.4);
+    #else
+    fullShadow *= 0.75;
+    #endif
+    #endif
 
     #ifdef ADVANCED_MATERIALS
     if (subsurface > 0.0){

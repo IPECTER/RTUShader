@@ -41,7 +41,7 @@ vec4 Raytrace(sampler2D depthtex, vec3 viewPos, vec3 normal, float dither, out f
 
 		vec3 rfragpos = vec3(pos.xy, texture2D(depthtex,pos.xy).r);
         rfragpos = nvec3(gbufferProjectionInverse * nvec4(rfragpos * 2.0 - 1.0));
-		dist = abs(dot(start - rfragpos, normal));
+		dist = abs(dot(normalize(start - rfragpos), normal));
 
         float err = length(viewPos - rfragpos);
 		float lVector = length(vector) * pow(length(tvector), 0.1) * errMult;

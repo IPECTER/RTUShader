@@ -297,7 +297,7 @@ void main() {
 		vec3 shadow = vec3(0.0);
 		GetLighting(albedo.rgb, shadow, viewPos, worldPos, lightmap, color.a, NoL, vanillaDiffuse,
 					parallaxShadow, emission, subsurface, basicSubsurface);
-					
+		
 		#ifdef ADVANCED_MATERIALS
 		float puddles = 0.0;
 		#ifdef REFLECTION_RAIN

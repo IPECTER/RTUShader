@@ -159,7 +159,7 @@ void Bloom(inout vec3 color, vec2 coord) {
 }
 
 void AutoExposure(inout vec3 color, inout float exposure, float tempExposure) {
-	float exposureLod = log2(viewHeight * 0.7);
+	float exposureLod = log2(viewHeight * AUTO_EXPOSURE_RADIUS);
 	
 	exposure = length(texture2DLod(colortex0, vec2(0.5), exposureLod).rgb);
 	exposure = max(exposure, 0.0001);
@@ -287,7 +287,7 @@ void main() {
 	
 	#ifdef AUTO_EXPOSURE
 	if (texCoord.x < 2.0 * pw && texCoord.y < 2.0 * ph)
-		temporalData = mix(tempExposure, sqrt(exposure), 0.033);
+		temporalData = mix(tempExposure, sqrt(exposure), AUTO_EXPOSURE_SPEED);
 	#endif
 
 	#ifdef LENS_FLARE

@@ -412,18 +412,17 @@ void main() {
 			#if REFLECTION > 0
 			vec4 reflection = vec4(0.0);
 			vec3 skyReflection = vec3(0.0);
+			float reflectionMask = 0.0;
 	
 			fresnel = fresnel * 0.98 + 0.02;
 			fresnel*= max(1.0 - isEyeInWater * 0.5 * water, 0.5);
 			
 			#if REFLECTION == 2
-			reflection = SimpleReflection(viewPos, newNormal, dither);
+			reflection = SimpleReflection(viewPos, newNormal, dither, reflectionMask);
 			reflection.rgb = pow(reflection.rgb * 2.0, vec3(8.0));
 			#endif
 			
 			if (reflection.a < 1.0) {
-				vec3 specularColor = GetSpecularColor(lightmap.y, 0.0, vec3(1.0));
-
 				#ifdef OVERWORLD
 				vec3 skyRefPos = reflect(normalize(viewPos), newNormal);
 				skyReflection = GetSkyColor(skyRefPos, true);
@@ -457,22 +456,24 @@ void main() {
 				skyReflection = endCol.rgb * 0.01;
 				#endif
 
-				#if defined OVERWORLD || defined END
-				vec3 specular = GetSpecularHighlight(newNormal, viewPos,  0.9, vec3(0.02),
-													 specularColor, shadow, color.a);
-				#if ALPHA_BLEND == 0
-				float specularAlpha = pow(mix(albedo.a, 1.0, fresnel), 2.2) * fresnel;
-				#else
-				float specularAlpha = mix(albedo.a , 1.0, fresnel) * fresnel;
-				#endif
-
-				skyReflection += specular / specularAlpha;
-				#endif
-
 				skyReflection *= clamp(1.0 - isEyeInWater, 0.0, 1.0);
 			}
 			
 			reflection.rgb = max(mix(skyReflection, reflection.rgb, reflection.a), vec3(0.0));
+
+			#if defined OVERWORLD || defined END
+			vec3 specularColor = GetSpecularColor(lightmap.y, 0.0, vec3(1.0));
+
+			vec3 specular = GetSpecularHighlight(newNormal, viewPos,  0.9, vec3(0.02),
+													specularColor, shadow, color.a);
+			#if ALPHA_BLEND == 0
+			float specularAlpha = pow(mix(albedo.a, 1.0, fresnel), 2.2) * fresnel;
+			#else
+			float specularAlpha = mix(albedo.a , 1.0, fresnel) * fresnel;
+			#endif
+
+			reflection.rgb += specular * (1.0 - reflectionMask) / specularAlpha;
+			#endif
 			
 			albedo.rgb = mix(albedo.rgb, reflection.rgb, fresnel);
 			albedo.a = mix(albedo.a, 1.0, fresnel);
@@ -505,9 +506,10 @@ void main() {
 			if (smoothness > 0.0) {
 				vec4 reflection = vec4(0.0);
 				vec3 skyReflection = vec3(0.0);
+				float reflectionMask = 0.0;
 				
 				float ssrMask = clamp(length(fresnel3) * 400.0 - 1.0, 0.0, 1.0);
-				if(ssrMask > 0.0) reflection = SimpleReflection(viewPos, newNormal, dither);
+				if(ssrMask > 0.0) reflection = SimpleReflection(viewPos, newNormal, dither, reflectionMask);
 				reflection.rgb = pow(reflection.rgb * 2.0, vec3(8.0));
 				reflection.a *= ssrMask;
 
@@ -541,7 +543,7 @@ void main() {
 					#endif
 				}
 
-				reflection.rgb = max(mix(skyReflection, reflection.rgb, reflection.a), vec3(0.0));
+				reflection.rgb = max(mix(skyReflection, reflection.rgb, reflectionMask), vec3(0.0));
 
 				albedo.rgb = albedo.rgb * (1.0 - fresnel3 * (1.0 - metalness)) +
 							 reflection.rgb * fresnel3;

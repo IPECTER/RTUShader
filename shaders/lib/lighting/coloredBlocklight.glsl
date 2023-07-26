@@ -18,7 +18,7 @@ vec3 ApplyMultiColoredBlocklight(vec3 blocklightCol, vec3 screenPos) {
 	if (screenPos.z > 0.56) {
 		screenPos.xy = Reprojection(screenPos);
 	}
-	vec3 coloredLight = texture2D(colortex9, screenPos.xy).rgb;
+	vec3 coloredLight = texture2DLod(colortex9, screenPos.xy, 2).rgb;
 	
 	#ifndef MCBL_LEGACY_COLOR
 	vec3 coloredLightNormalized = coloredLight + 0.000001;

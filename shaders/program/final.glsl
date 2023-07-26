@@ -62,6 +62,9 @@ void SharpenFilter(inout vec3 color, vec2 coord) {
 }
 #endif
 
+#ifdef SHADOW
+#endif
+
 //Program//
 void main() {
     vec2 newTexCoord = texCoord;

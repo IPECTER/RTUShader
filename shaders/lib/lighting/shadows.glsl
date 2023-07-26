@@ -1,3 +1,4 @@
+#ifdef SHADOW
 uniform sampler2DShadow shadowtex0;
 
 #ifdef SHADOW_COLOR
@@ -123,7 +124,8 @@ vec3 GetShadow(vec3 worldPos, float NoL, float subsurface, float skylight) {
     doShadow = doShadow && skylight > 0.001;
     #endif
 
-    if (!doShadow) return vec3(skylight);
+    float skylightShadow = smoothstep(0.866, 1.0, skylight);
+    if (!doShadow) return vec3(skylightShadow);
 
     float biasFactor = sqrt(1.0 - NoL * NoL) / NoL;
     float distortBias = distortFactor * shadowDistance / 256.0;
@@ -201,3 +203,17 @@ vec3 GetSubsurfaceShadow(vec3 worldPos, float subsurface, float skylight) {
 
     return subsurfaceShadow;
 }
+#else
+vec3 GetShadow(vec3 worldPos, float NoL, float subsurface, float skylight) {
+    #ifdef OVERWORLD
+    float shadow = smoothstep(0.866,1.0,skylight);
+    return vec3(shadow * shadow);
+    #else
+    return vec3(1.0);
+    #endif
+}
+
+vec3 GetSubsurfaceShadow(vec3 worldPos, float subsurface, float skylight) {
+    return vec3(0.0);
+}
+#endif

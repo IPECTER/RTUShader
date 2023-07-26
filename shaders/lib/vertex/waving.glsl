@@ -90,7 +90,7 @@ vec3 WavingBlocks(vec3 position, float istopv) {
 
     #ifdef WAVING_PLANT
     if (mc_Entity.x == 10101 && (istopv > 0.9|| fract(worldpos.y + 0.005) > 0.01))
-        wave += CalcMove(worldpos, 0.7, 1.35, vec2(0.12, 0.06));
+        wave += CalcMove(worldpos, 0.7, 1.35, vec2(0.12, 0.00));
     if (mc_Entity.x == 10107 || mc_Entity.x == 10207)
         wave += CalcMove(worldpos, 0.5, 1.25, vec2(0.06, 0.00));
     if (mc_Entity.x == 10108)

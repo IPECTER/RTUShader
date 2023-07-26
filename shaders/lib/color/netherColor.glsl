@@ -6,7 +6,7 @@ vec4 netherBasalt  = vec4(vec3(NETHER_BR, NETHER_BG, NETHER_BB) / 255.0, 1.0) * 
 
 #ifdef NETHER_VANILLA
 uniform vec3 fogColor;
-vec4 netherColSqrt = vec4(normalize(fogColor), length(fogColor));
+vec4 netherColSqrt = vec4(normalize(fogColor + 0.0001), length(fogColor));
 #else
 #ifdef WEATHER_PERBIOME
 uniform float isValley, isCrimson, isWarped, isBasalt;

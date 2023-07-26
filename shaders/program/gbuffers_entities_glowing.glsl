@@ -185,7 +185,8 @@ void main() {
 		emission = 0.0;
 		#endif
 
-		vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), gl_FragCoord.z);
+		float correctedZ = (gl_FragCoord.z * 2.0 - 1.0) * 100.0 * 0.5 + 0.5;
+		vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), correctedZ);
 		#if defined TAA && !defined TAA_SELECTIVE
 		vec3 viewPos = ToNDC(vec3(TAAJitter(screenPos.xy, -0.5), screenPos.z));
 		#else
