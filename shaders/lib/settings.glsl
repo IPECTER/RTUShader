@@ -139,7 +139,7 @@ Please don't edit anything from Undefine section and onwards.
   #define WATER_SHARPNESS 0.2 //[0.8 0.5 0.2]
   #define WATER_SPEED 1.75 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 2.50 3.00 3.50 4.00]
   #define WATER_FOG 0 //[0 1]
-  #define WATER_FOG_DENSITY 0.25 //[0.25 0.50 0.75 1.00 1.50 2.00 2.50 3.00 3.50 4.00]
+  #define WATER_FOG_DENSITY 1.00 //[0.25 0.50 0.75 1.00 1.50 2.00 2.50 3.00 3.50 4.00]
   #define WATER_CAUSTICS_STRENGTH 1.00 //[0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00]
   #define WATER_PIXEL 0 //[0 16 32 64 128]
 
