@@ -75,6 +75,10 @@ uniform sampler2D colortex8;
 uniform sampler2D colortex9;
 #endif
 
+#if CLOUDS == 2
+uniform sampler2D gaux1;
+#endif
+
 //Common Variables//
 float eBS = eyeBrightnessSmooth.y / 240.0;
 float sunVisibility  = clamp((dot( sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
@@ -252,6 +256,14 @@ void main() {
 
 		float dither = Bayer8(gl_FragCoord.xy);
 
+		#if CLOUDS == 2
+		float closestLength = texture2D(gaux1, screenPos.xy).r * far * 2.0;
+
+		if (length(viewPos) > closestLength) {
+			discard;
+		}
+		#endif
+
 		vec3 normalMap = vec3(0.0, 0.0, 1.0);
 		
 		mat3 tbnMatrix = mat3(tangent.x, binormal.x, normal.x,
@@ -416,6 +428,7 @@ void main() {
 	
 			fresnel = fresnel * 0.98 + 0.02;
 			fresnel*= max(1.0 - isEyeInWater * 0.5 * water, 0.5);
+			// fresnel = 1.0;
 			
 			#if REFLECTION == 2
 			reflection = SimpleReflection(viewPos, newNormal, dither, reflectionMask);
@@ -432,7 +445,14 @@ void main() {
 				#endif
 
 				#if CLOUDS == 1
-				vec4 cloud = DrawCloud(skyRefPos * 100.0, dither, lightCol, ambientCol);
+				vec4 cloud = DrawCloudSkybox(skyRefPos * 100.0, 1.0, dither, lightCol, ambientCol, true);
+				skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
+				#endif
+				#if CLOUDS == 2
+				vec3 cameraPos = GetReflectedCameraPos(worldPos, newNormal);
+				float closestLength = 0.0;
+
+				vec4 cloud = DrawCloudVolumetric(skyRefPos * 8192.0, cameraPos, 1.0, dither, lightCol, ambientCol, closestLength, true);
 				skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
 				#endif
 
@@ -523,7 +543,14 @@ void main() {
 					#endif
 					
 					#if CLOUDS == 1
-					vec4 cloud = DrawCloud(skyRefPos * 100.0, dither, lightCol, ambientCol);
+					vec4 cloud = DrawCloudSkybox(skyRefPos * 100.0, 1.0, dither, lightCol, ambientCol, false);
+					skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
+					#endif
+					#if CLOUDS == 2
+					vec3 cameraPos = GetReflectedCameraPos(worldPos, newNormal);
+					float closestLength = 0.0;
+
+					vec4 cloud = DrawCloudVolumetric(skyRefPos * 8192.0, cameraPos, 1.0, dither, lightCol, ambientCol, closestLength, true);
 					skyReflection = mix(skyReflection, cloud.rgb, cloud.a);
 					#endif
 

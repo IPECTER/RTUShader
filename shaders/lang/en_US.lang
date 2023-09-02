@@ -74,7 +74,7 @@ screen.EXTRAS=Extras
 screen.ANIMATION=Animations
 
 #Settings
-option.ABOUT=§bRTUShader §fv§64.0§f
+option.ABOUT=§bRTUShader §fv§64.1§f
 option.ABOUT.comment=RTUShader(BSLedit) by 이팩터 / BSL by Capt Tatsu
 value.ABOUT.0=by 이팩터
 
@@ -287,10 +287,11 @@ option.NORMAL_PLANTS.comment=Adjusts plant shading. §e[*]§rDisable this if non
 
 #Atmospherics
 option.CLOUDS=Clouds
-option.CLOUDS.comment=Enables clouds. §a[+]§rDefault clouds benefits from TAA. §e[*]§rVanilla clouds requires vanilla cloud setting set to default or on.
+option.CLOUDS.comment=Enables clouds. §a[+]§rSkybox and volumetric clouds benefit from TAA. §e[*]§rVanilla clouds requires vanilla cloud setting set to default or on.
 value.CLOUDS.0=§cOFF
-value.CLOUDS.1=Default
-value.CLOUDS.2=Vanilla
+value.CLOUDS.1=Skybox
+value.CLOUDS.2=Volumetric
+value.CLOUDS.3=Vanilla
 
 option.SKY_DESATURATION=Sky Desaturation
 option.SKY_DESATURATION.comment=Reduces saturation while adding some tint to the skybox at night
@@ -403,6 +404,12 @@ option.CLOUD_OPACITY.comment=Adjusts cloud opacity.
 
 option.CLOUD_BRIGHTNESS=Brightness
 option.CLOUD_BRIGHTNESS.comment=Adjusts cloud brightness.
+
+option.CLOUD_VOLUMETRIC_SCALE=Volumetric Scale
+option.CLOUD_VOLUMETRIC_SCALE.comment=Adjusts volumetric cloud altitude and size
+value.CLOUD_VOLUMETRIC_SCALE.6.0=Old Vanilla
+value.CLOUD_VOLUMETRIC_SCALE.12.4=Vanilla
+value.CLOUD_VOLUMETRIC_SCALE.16.0=Original Skybox
 
 #Water
 option.WATER_MODE=Water Texture Mode
@@ -823,22 +830,31 @@ option.ANIMATION_SPEED.comment=Adjusts animation speed.
 
 #Waving Blocks
 option.WAVING_GRASS=Grass
-option.WAVING_PLANT.comment=Allows grass to wave.
+option.WAVING_GRASS.comment=Allows grass to wave.
+
 option.WAVING_CROP=Crops
 option.WAVING_CROP.comment=Allows plants on farmlands to wave.
+
 option.WAVING_PLANT=Plants
 option.WAVING_PLANT.comment=Allows various plants to wave.
+
 option.WAVING_TALL_PLANT=Tall Plants
-option.WAVING_PLANT.comment=Allows 2 block height plants to wave.
+option.WAVING_TALL_PLANT.comment=Allows 2 block height plants to wave.
+
 option.WAVING_LEAF=Leaves
 option.WAVING_LEAF.comment=Allows leaves to wave.
+
 option.WAVING_VINE=Vines
 option.WAVING_VINE.comment=Allows vines to wave.
+
 option.WAVING_WATER=Water
 option.WAVING_WATER.comment=Allows water to wave.
+
 option.WAVING_LAVA=Lava
 option.WAVING_LAVA.comment=Allows lava to wave.
+
 option.WAVING_FIRE=Fire
 option.WAVING_FIRE.comment=Allows fire to wave.
+
 option.WAVING_LANTERN=Lantern
 option.WAVING_LANTERN.comment=Allows lantern to wave.

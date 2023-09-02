@@ -186,8 +186,7 @@ void BSLTonemap(inout vec3 color) {
 
 void ColorSaturation(inout vec3 color) {
 	float grayVibrance = (color.r + color.g + color.b) / 3.0;
-	float graySaturation = grayVibrance;
-	if (SATURATION < 1.00) graySaturation = dot(color, vec3(0.299, 0.587, 0.114));
+	float graySaturation = dot(color, vec3(0.299, 0.587, 0.114));
 
 	float mn = min(color.r, min(color.g, color.b));
 	float mx = max(color.r, max(color.g, color.b));

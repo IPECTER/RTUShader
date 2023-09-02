@@ -21,13 +21,13 @@ uniform float aspectRatio, frameTimeCounter;
 //Optifine Constants//
 /*
 const int colortex0Format = R11F_G11F_B10F; //main scene
-const int colortex1Format = RGB8; //raw translucent, bloom, final scene
+const int colortex1Format = RGB8; //raw translucent, vl, bloom, final scene
 const int colortex2Format = RGBA16; //temporal data
 const int colortex3Format = RGB8; //smoothness, sky occlusion, entity mask
 const int gaux1Format = R8; //cloud alpha, ao
 const int gaux2Format = RGB10_A2; //reflection image
-const int gaux3Format = RGB16; //opaque normals, refraction vector
-const int gaux4Format = RGB16; //fresnel
+const int gaux3Format = RGBA16; //opaque normals, refraction vector
+const int gaux4Format = RGBA16; //fresnel
 const int colortex8Format = RGB8; //colored light
 const int colortex9Format = RGB16F; //colored light
 */

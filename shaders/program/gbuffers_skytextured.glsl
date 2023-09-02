@@ -61,14 +61,6 @@ void main() {
 	#ifdef OVERWORLD
 	albedo *= color;
 	albedo.rgb = pow(albedo.rgb,vec3(2.2)) * SKYBOX_BRIGHTNESS * albedo.a;
-
-	#if CLOUDS == 1
-	if (albedo.a > 0.0) {
-		float cloudAlpha = texture2D(gaux1, gl_FragCoord.xy / vec2(viewWidth, viewHeight)).r;
-		float alphaMult = 1.0 - 0.6 * rainStrength;
-		albedo.a *= 1.0 - cloudAlpha / (alphaMult * alphaMult);
-	}
-	#endif
 	
 	#ifdef ROUND_SUN_MOON
 	if (renderStage == MC_RENDER_STAGE_SUN || renderStage == MC_RENDER_STAGE_MOON) {

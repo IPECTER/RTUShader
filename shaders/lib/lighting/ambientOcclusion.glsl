@@ -13,7 +13,7 @@ float AmbientOcclusion(float dither) {
 	depth = GetLinearDepth(depth);
 
 	#ifdef TAA
-	dither = fract(dither + frameTimeCounter * 8.0);
+	dither = fract(dither + frameCounter * 0.618);
 	#endif
 
 	float currentStep = 0.2 * dither + 0.2;

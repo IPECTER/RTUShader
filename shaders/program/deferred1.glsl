@@ -37,6 +37,7 @@ uniform mat4 gbufferModelView, gbufferPreviousModelView, gbufferModelViewInverse
 uniform sampler2D colortex0;
 uniform sampler2D colortex3;
 uniform sampler2D depthtex0;
+uniform sampler2D noisetex;
 
 #ifdef AO
 uniform sampler2D colortex4;
@@ -48,7 +49,7 @@ uniform vec3 previousCameraPosition;
 uniform sampler2D colortex5;
 uniform sampler2D colortex6;
 uniform sampler2D colortex7;
-uniform sampler2D noisetex;
+// uniform sampler2D noisetex;
 #endif
 
 #ifdef MULTICOLORED_BLOCKLIGHT
@@ -156,6 +157,7 @@ void GlowOutline(inout vec3 color){
 #include "/lib/util/dither.glsl"
 #include "/lib/atmospherics/sky.glsl"
 #include "/lib/atmospherics/fog.glsl"
+#include "/lib/atmospherics/clouds.glsl"
 
 #ifdef OUTLINE_ENABLED
 #include "/lib/util/outlineOffset.glsl"
@@ -169,7 +171,6 @@ void GlowOutline(inout vec3 color){
 #include "/lib/reflections/complexFresnel.glsl"
 #include "/lib/surface/materialDeferred.glsl"
 #include "/lib/reflections/roughReflections.glsl"
-#include "/lib/atmospherics/clouds.glsl"
 #endif
 
 //Program//
@@ -226,7 +227,17 @@ void main() {
 				#endif
 
 				#if CLOUDS == 1
-				vec4 cloud = DrawCloud(skyRefPos * 100.0, dither, lightCol, ambientCol);
+				vec4 cloud = DrawCloudSkybox(skyRefPos * 100.0, 1.0, dither, lightCol, ambientCol, false);
+				skyReflection = mix(skyReflection, cloud.rgb, cloud.a * cloudMixRate);
+				#endif
+				#if CLOUDS == 2
+				vec4 worldPos = gbufferModelViewInverse * vec4(viewPos.xyz, 1.0);
+				worldPos.xyz /= worldPos.w;
+
+				vec3 cameraPos = GetReflectedCameraPos(worldPos.xyz, normal);
+				float closestLength = 0.0;
+
+				vec4 cloud = DrawCloudVolumetric(skyRefPos * 8192.0, cameraPos, 1.0, dither, lightCol, ambientCol, closestLength, true);
 				skyReflection = mix(skyReflection, cloud.rgb, cloud.a * cloudMixRate);
 				#endif
 
@@ -282,6 +293,25 @@ void main() {
 		if (blindFactor > 0.0 || darknessFactor > 0.0) color.rgb *= 1.0 - max(blindFactor, darknessFactor);
 	}
 
+	float closestLength = 2.0 * far;
+	#ifdef OVERWORLD
+	#if CLOUDS == 1
+	vec4 cloud = DrawCloudSkybox(viewPos.xyz, z, dither, lightCol, ambientCol, false);
+	color.rgb = mix(color.rgb, cloud.rgb, cloud.a);
+	#endif
+	#if CLOUDS == 2
+	vec4 cloud = DrawCloudVolumetric(viewPos.xyz, cameraPosition, z, dither, lightCol, ambientCol, closestLength, false);
+
+	// if (texCoord.x < 0.5) {
+	// 	cloud = DrawCloudSkybox(viewPos.xyz, z, dither, lightCol, ambientCol, false);
+	// 	closestLength = 2.0 * far;
+	// }
+
+	color.rgb = mix(color.rgb, cloud.rgb, cloud.a);
+	#endif
+	#endif
+	closestLength /= 2.0 * far;
+
 	#ifdef OUTLINE_ENABLED
 	color.rgb = mix(color.rgb, outerOutline.rgb, outerOutline.a);
 	#endif
@@ -297,19 +327,20 @@ void main() {
 	color.rgb = sqrt(max(color.rgb, vec3(0.0)));
 	#endif
     
-    /*DRAWBUFFERS:0 */
+    /*DRAWBUFFERS:04 */
     gl_FragData[0] = color;
+	gl_FragData[1] = vec4(closestLength, 0.0, 0.0, 1.0);
 
 	#if !defined REFLECTION_PREVIOUS && REFRACTION == 0
-	/*DRAWBUFFERS:05*/
-	gl_FragData[1] = vec4(reflectionColor, float(z < 1.0));
+	/*DRAWBUFFERS:045*/
+	gl_FragData[2] = vec4(reflectionColor, float(z < 1.0));
 	#elif defined REFLECTION_PREVIOUS && REFRACTION > 0
-	/*DRAWBUFFERS:06*/
-	gl_FragData[1] = vec4(0.0, 0.0, 0.0, 1.0);
-	#elif !defined REFLECTION_PREVIOUS && REFRACTION > 0
-	/*DRAWBUFFERS:056*/
-	gl_FragData[1] = vec4(reflectionColor, float(z < 1.0));
+	/*DRAWBUFFERS:046*/
 	gl_FragData[2] = vec4(0.0, 0.0, 0.0, 1.0);
+	#elif !defined REFLECTION_PREVIOUS && REFRACTION > 0
+	/*DRAWBUFFERS:0456*/
+	gl_FragData[2] = vec4(reflectionColor, float(z < 1.0));
+	gl_FragData[3] = vec4(0.0, 0.0, 0.0, 1.0);
 	#endif
 }
 

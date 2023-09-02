@@ -24,7 +24,7 @@ vec4 Raytrace(sampler2D depthtex, vec3 viewPos, vec3 normal, float dither, out f
 	float dist = 0.0;
 	
 	#ifdef TAA
-	dither = fract(dither + frameTimeCounter);
+	dither = fract(dither + frameCounter * 0.618);
 	#endif
 
 	vec3 start = viewPos + normal * 0.075;

@@ -49,7 +49,7 @@ float moonVisibility = clamp((dot(-sunVec, upVec) + 0.05) * 10.0, 0.0, 1.0);
 
 //Program//
 void main() {
-	#if CLOUDS != 2
+	#if CLOUDS != 3
 	discard;
 	#endif
 	

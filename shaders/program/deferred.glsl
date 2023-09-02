@@ -13,8 +13,9 @@ https://bitslablab.com
 varying vec2 texCoord;
 
 //Uniforms//
+uniform int frameCounter;
+
 uniform float far, near;
-uniform float frameTimeCounter;
 uniform float viewWidth, viewHeight, aspectRatio;
 
 uniform mat4 gbufferProjection;

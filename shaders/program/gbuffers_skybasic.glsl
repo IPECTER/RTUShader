@@ -19,6 +19,7 @@ uniform int isEyeInWater;
 uniform int worldTime;
 
 uniform float blindFactor, darknessFactor;
+uniform float far, near;
 uniform float frameCounter;
 uniform float frameTimeCounter;
 uniform float nightVision;
@@ -120,11 +121,6 @@ void main() {
 	#ifdef AURORA
 	albedo.rgb += DrawAurora(viewPos.xyz, dither, 24);
 	#endif
-	
-	#if CLOUDS == 1
-	vec4 cloud = DrawCloud(viewPos.xyz, dither, lightCol, ambientCol);
-	albedo.rgb = mix(albedo.rgb, cloud.rgb, cloud.a);
-	#endif
 
 	SunGlare(albedo, viewPos.xyz, lightCol);
 
@@ -145,10 +141,6 @@ void main() {
 	
     /* DRAWBUFFERS:0 */
 	gl_FragData[0] = vec4(albedo, 1.0 - star);
-    #if defined OVERWORLD && CLOUDS == 1
-    /* DRAWBUFFERS:04 */
-	gl_FragData[1] = vec4(cloud.a, 0.0, 0.0, 0.0);
-    #endif
 }
 
 #endif
