@@ -94,7 +94,7 @@ Please don't edit anything from Undefine section and onwards.
   #define STARS
 //#define SKY_DESATURATION
 //#define AURORA
-  #define ROUND_SUN_MOON
+//#define ROUND_SUN_MOON
   #define DISTANT_FADE 3 //[0 1 2 3]
   #define DISTANT_FADE_STYLE 1 //[0 1]
   #define WEATHER_PERBIOME
