@@ -74,7 +74,7 @@ screen.EXTRAS=Extras
 screen.ANIMATION=Animations
 
 #Settings
-option.ABOUT=§bRTUShader §fv§64.1§f
+option.ABOUT=§bRTUShader §fv§64.2§f
 option.ABOUT.comment=RTUShader(BSLedit) by 이팩터 / BSL by Capt Tatsu
 value.ABOUT.0=by 이팩터
 
